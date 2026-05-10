@@ -1,0 +1,1952 @@
+<!DOCTYPE html>
+
+<!-- ZEN LAMP Chat Atlas v1.1: local-first PoC, no API connection. -->
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1" name="viewport"/>
+<link href="/favicon.ico?v=13" rel="icon" sizes="any"/>
+<link href="/favicon-16x16.png?v=13" rel="icon" sizes="16x16" type="image/png"/>
+<link href="/favicon-32x32.png?v=13" rel="icon" sizes="32x32" type="image/png"/>
+<link href="/favicon-192x192.png?v=13" rel="icon" sizes="192x192" type="image/png"/>
+<link href="/favicon-512x512.png?v=13" rel="icon" sizes="512x512" type="image/png"/>
+<link href="/apple-touch-icon-180.png?v=13" rel="apple-touch-icon" sizes="180x180"/>
+<link href="/site.webmanifest?v=13" rel="manifest"/>
+<title>ZEN LAMP Tools | Chat Atlas, Memory Curator, Context Bridge</title>
+<style>
+    :root {
+      --bg: #f7f2e8;
+      --panel: #fffaf0;
+      --panel2: #fffdf8;
+      --ink: #27221b;
+      --muted: #73695d;
+      --line: #deccb3;
+      --accent: #96592f;
+      --accent2: #6f3e20;
+      --soft: #efe1cd;
+      --ok: #2f6b46;
+      --warn: #8a5b15;
+      --danger: #8b2f24;
+      --shadow: 0 14px 34px rgba(72, 46, 20, .13);
+      --radius: 18px;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+      --sans: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: var(--sans);
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 10% 0%, rgba(180, 114, 55, .24), transparent 34rem),
+        radial-gradient(circle at 90% 10%, rgba(110, 67, 33, .10), transparent 30rem),
+        linear-gradient(135deg, #f7f2e8 0%, #f1e3ce 100%);
+    }
+
+    header {
+      max-width: 1500px;
+      margin: 0 auto;
+      padding: 28px 28px 14px;
+    }
+
+    .top {
+      display: flex;
+      justify-content: space-between;
+      gap: 18px;
+      flex-wrap: wrap;
+      align-items: flex-start;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(1.55rem, 3.2vw, 2.55rem);
+      letter-spacing: -0.045em;
+      line-height: 1.08;
+    }
+
+    .subtitle {
+      margin: 10px 0 0;
+      max-width: 900px;
+      color: var(--muted);
+      line-height: 1.65;
+      font-size: .98rem;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border: 1px solid var(--line);
+      background: rgba(255, 250, 240, .78);
+      color: var(--accent2);
+      border-radius: 999px;
+      padding: 9px 13px;
+      font-weight: 800;
+      box-shadow: 0 8px 22px rgba(72, 46, 20, .08);
+      white-space: nowrap;
+    }
+
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 999px;
+      background: var(--ok);
+      box-shadow: 0 0 0 5px rgba(47, 107, 70, .12);
+    }
+
+    .notice {
+      max-width: 1500px;
+      margin: 0 auto;
+      padding: 0 28px 14px;
+    }
+
+    .notice-inner {
+      border: 1px solid var(--line);
+      background: rgba(255, 253, 247, .76);
+      border-radius: 16px;
+      padding: 12px 14px;
+      color: #554a3e;
+      line-height: 1.5;
+      font-size: .9rem;
+      box-shadow: 0 8px 20px rgba(72, 46, 20, .06);
+    }
+
+    main {
+      max-width: 1500px;
+      margin: 0 auto;
+      padding: 0 28px 34px;
+      display: grid;
+      grid-template-columns: 380px minmax(420px, 1fr) minmax(420px, 1fr);
+      gap: 18px;
+    }
+
+    .card {
+      background: rgba(255, 250, 240, .88);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      min-height: 760px;
+      display: flex;
+      flex-direction: column;
+      backdrop-filter: blur(10px);
+    }
+
+    .card-header {
+      padding: 16px 16px 13px;
+      border-bottom: 1px solid var(--line);
+      background: rgba(255, 253, 247, .74);
+    }
+
+    .card-header h2 {
+      margin: 0;
+      font-size: 1.02rem;
+      letter-spacing: -.02em;
+    }
+
+    .card-header p {
+      margin: 7px 0 0;
+      color: var(--muted);
+      line-height: 1.45;
+      font-size: .86rem;
+    }
+
+    .card-body {
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      flex: 1;
+      min-height: 0;
+    }
+
+    .dropzone {
+      border: 2px dashed #c9ae8c;
+      background: rgba(255, 253, 247, .70);
+      border-radius: 18px;
+      padding: 18px;
+      text-align: center;
+      transition: border .14s ease, background .14s ease, transform .14s ease;
+    }
+
+    .dropzone.drag {
+      border-color: var(--accent);
+      background: #fff;
+      transform: translateY(-1px);
+    }
+
+    input[type="file"] {
+      display: none;
+    }
+
+    .file-label {
+      display: inline-block;
+      padding: 11px 14px;
+      border-radius: 14px;
+      background: var(--accent);
+      color: white;
+      font-weight: 900;
+      cursor: pointer;
+      margin-top: 8px;
+    }
+
+    .file-label:hover { background: var(--accent2); }
+
+    label {
+      font-size: .8rem;
+      font-weight: 900;
+      color: #51463b;
+    }
+
+    input, textarea, select {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: var(--panel2);
+      color: var(--ink);
+      outline: none;
+      font: inherit;
+      transition: border .15s ease, box-shadow .15s ease, background .15s ease;
+    }
+
+    input:focus, textarea:focus, select:focus {
+      border-color: rgba(150, 89, 47, .68);
+      box-shadow: 0 0 0 4px rgba(150, 89, 47, .13);
+      background: white;
+    }
+
+    input, select { min-height: 42px; padding: 10px 11px; }
+
+    textarea {
+      min-height: 320px;
+      resize: vertical;
+      padding: 13px;
+      line-height: 1.55;
+      font-size: .88rem;
+    }
+
+    #chatText {
+      min-height: 465px;
+      font-family: var(--mono);
+      font-size: .80rem;
+      white-space: pre;
+    }
+
+    #promptOutput {
+      min-height: 560px;
+      font-family: var(--mono);
+      font-size: .80rem;
+      background: #fffdfa;
+    }
+
+    .field { display: flex; flex-direction: column; gap: 7px; }
+
+    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 9px;
+    }
+
+    button {
+      border: 0;
+      border-radius: 14px;
+      padding: 10px 12px;
+      min-height: 40px;
+      cursor: pointer;
+      font: inherit;
+      font-weight: 900;
+      transition: transform .12s ease, box-shadow .12s ease, background .12s ease;
+    }
+
+    button:hover:not(:disabled) {
+      transform: translateY(-1px);
+      box-shadow: 0 10px 18px rgba(72, 46, 20, .14);
+    }
+
+    button:active:not(:disabled) { transform: translateY(0); box-shadow: none; }
+    button:disabled { opacity: .45; cursor: not-allowed; }
+
+    .primary { background: var(--accent); color: white; flex: 1; }
+    .primary:hover:not(:disabled) { background: var(--accent2); }
+    .secondary { background: var(--soft); color: var(--accent2); border: 1px solid var(--line); }
+    .ghost { background: transparent; color: var(--accent2); border: 1px solid var(--line); }
+    .danger { background: #f1d8d3; color: var(--danger); border: 1px solid #d9aaa2; }
+
+    .status {
+      min-height: 24px;
+      color: var(--muted);
+      font-size: .84rem;
+      line-height: 1.45;
+    }
+
+    .ok { color: var(--ok); font-weight: 800; }
+    .warn { color: var(--warn); font-weight: 800; }
+    .bad { color: var(--danger); font-weight: 800; }
+
+    .stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 9px;
+    }
+
+    .stat {
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: rgba(255, 253, 247, .68);
+      padding: 10px;
+    }
+
+    .stat strong {
+      display: block;
+      font-size: 1.06rem;
+      margin-bottom: 2px;
+    }
+
+    .stat span {
+      color: var(--muted);
+      font-size: .76rem;
+    }
+
+    .chat-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      overflow: auto;
+      min-height: 310px;
+      max-height: 420px;
+      padding-right: 2px;
+    }
+
+    .chat-item {
+      border: 1px solid var(--line);
+      background: rgba(255, 253, 247, .76);
+      border-radius: 14px;
+      padding: 10px 11px;
+      cursor: pointer;
+      transition: background .12s ease, border .12s ease, transform .12s ease;
+    }
+
+    .chat-item:hover {
+      background: #fff;
+      border-color: rgba(150, 89, 47, .48);
+      transform: translateY(-1px);
+    }
+
+    .chat-item.active {
+      border-color: var(--accent);
+      background: #fff;
+      box-shadow: 0 0 0 3px rgba(150, 89, 47, .11);
+    }
+
+    .chat-title {
+      font-weight: 900;
+      font-size: .88rem;
+      line-height: 1.35;
+      margin-bottom: 5px;
+    }
+
+    .chat-meta {
+      color: var(--muted);
+      font-size: .73rem;
+      display: flex;
+      gap: 7px;
+      flex-wrap: wrap;
+    }
+
+    .pill {
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: rgba(239, 225, 205, .56);
+      color: #66584a;
+      padding: 5px 8px;
+      font-size: .73rem;
+      font-weight: 800;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .hint {
+      color: var(--muted);
+      font-size: .78rem;
+      line-height: 1.45;
+    }
+
+    .section-title {
+      font-size: .86rem;
+      font-weight: 950;
+      margin: 2px 0 0;
+      color: #443a31;
+    }
+
+    .small {
+      font-size: .78rem;
+      color: var(--muted);
+      line-height: 1.45;
+    }
+
+    .checks {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      background: rgba(239, 225, 205, .48);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 10px;
+    }
+
+    .check {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      color: #41382f;
+      line-height: 1.35;
+      font-size: .84rem;
+    }
+
+    .check input {
+      width: 17px;
+      height: 17px;
+      min-height: auto;
+      margin-top: 1px;
+      accent-color: var(--accent);
+      flex: 0 0 auto;
+    }
+
+    footer {
+      max-width: 1500px;
+      margin: 0 auto;
+      padding: 0 28px 28px;
+      color: var(--muted);
+      font-size: .8rem;
+      line-height: 1.55;
+    }
+
+    @media (max-width: 1250px) {
+      main { grid-template-columns: 1fr; }
+      .card { min-height: auto; }
+      .chat-list { max-height: 360px; }
+      #chatText, #promptOutput { min-height: 360px; }
+    }
+
+    @media (max-width: 560px) {
+      header, .notice, main, footer { padding-left: 15px; padding-right: 15px; }
+      .row, .stats { grid-template-columns: 1fr; }
+      .actions button { width: 100%; }
+    }
+  
+    .workflow-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+      margin: 14px 0;
+    }
+    .workflow-card {
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 12px;
+      background: rgba(255,255,255,0.04);
+    }
+    .workflow-card strong {
+      display:block;
+      font-size: 13px;
+      margin-bottom: 6px;
+    }
+    .workflow-card p {
+      margin:0;
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.45;
+    }
+    .principle-box {
+      border: 1px solid rgba(120, 180, 255, .35);
+      border-radius: 16px;
+      padding: 14px;
+      margin: 14px 0;
+      background: rgba(120, 180, 255, .08);
+      font-size: 13px;
+      line-height: 1.55;
+    }
+    @media (max-width: 800px) {
+      .workflow-grid { grid-template-columns: 1fr; }
+    }
+
+  </style>
+<meta content="Experimental tools for mapping AI conversations, governing memory, and preserving human judgment." name="description"/><meta content="ZEN LAMP PROJECT" property="og:site_name"/><meta content="ZEN LAMP Tools | Chat Atlas, Memory Curator, Context Bridge" property="og:title"/><meta content="Experimental tools for mapping AI conversations, governing memory, and preserving human judgment." property="og:description"/><meta content="website" property="og:type"/><meta content="https://zen-lamp.com/tools/chat-atlas/" property="og:url"/><meta content="https://zen-lamp.com/assets/og/zen-lamp-tools-og-v15.jpg" property="og:image"/>
+<meta itemprop="image" content="https://zen-lamp.com/assets/og/zen-lamp-tools-og-v15.jpg">
+<meta content="https://zen-lamp.com/assets/og/zen-lamp-tools-og-v15.jpg" property="og:image:secure_url"/><meta content="image/jpeg" property="og:image:type"/><meta content="1200" property="og:image:width"/><meta content="630" property="og:image:height"/><meta content="ZEN LAMP Tools | Chat Atlas, Memory Curator, Context Bridge" property="og:image:alt"/><meta content="summary_large_image" name="twitter:card"/>
+<meta name="twitter:site" content="@SHOSHIN_TENRYU">
+<meta name="twitter:creator" content="@SHOSHIN_TENRYU">
+<meta content="ZEN LAMP Tools | Chat Atlas, Memory Curator, Context Bridge" name="twitter:title"/><meta content="Experimental tools for mapping AI conversations, governing memory, and preserving human judgment." name="twitter:description"/><meta content="https://zen-lamp.com/assets/og/zen-lamp-tools-og-v15.jpg" name="twitter:image"/><meta content="ZEN LAMP Tools | Chat Atlas, Memory Curator, Context Bridge" name="twitter:image:alt"/></head>
+<body>
+<header>
+<div class="top">
+<div>
+<h1>ZEN LAMP Chat Atlas v1.1</h1>
+<p class="subtitle">Load conversations.json locally, choose a conversation, and turn it into Thinking Timeline, Decision Log, and Memory Governance prompts — without uploading anything. ZIP loading remains experimental.</p>
+</div>
+<div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+<div class="badge"><span class="dot"></span><span data-i18n="badge">Local-only / No upload</span></div>
+<select id="uiLangSelect" style="width:auto; min-width:120px;" title="UI Language">
+<option value="en">English</option>
+<option value="ja">日本語</option>
+<option value="zh">中文</option>
+<option value="ko">한국어</option>
+</select>
+</div>
+</div>
+</header>
+<div class="notice">
+<div class="notice-inner" data-i18n-html="notice">
+<strong>Privacy note:</strong> This page reads conversations.json inside your browser. It does not upload files, call an AI API, use telemetry, or send text to a server. Use it offline if you want. For sensitive data, review the selected chat before copying anything into an AI tool.
+    </div>
+</div>
+<div class="notice" style="margin-top:12px;">
+<div class="notice-inner" data-i18n-html="positionNotice">
+<strong>v1.1 Position:</strong> This is not an API-connected app yet. It is a local-first proof-of-concept for the ZEN LAMP idea:
+        <em>A document can be summarized. But a thinking process needs to be mapped.</em>
+        Use it to select a conversation, generate a high-quality analysis prompt, and paste only the selected text into the AI of your choice.
+      </div>
+</div>
+<main>
+<section class="card">
+<div class="card-header">
+<h2>1. Load conversations.json</h2>
+<p>Open your ChatGPT data export ZIP once, then drop the <code>conversations.json</code> file here. ZIP loading is also available, but JSON is recommended.</p>
+</div>
+<div class="principle-box" data-i18n-html="corePrincipleHtml">
+<strong>Core principle</strong><br/>
+          A document can be summarized. But a thinking process needs to be mapped.<br/>
+          The goal is not to remember everything. The goal is to decide what deserves to continue.
+        </div>
+<div class="workflow-grid">
+<div class="workflow-card" data-workflow="1">
+<strong>1. Load locally</strong>
+<p>Drop <code>conversations.json</code> from your ChatGPT export. The file is read inside your browser and is not uploaded by this HTML tool.</p>
+</div>
+<div class="workflow-card" data-workflow="2">
+<strong>2. Select intentionally</strong>
+<p>Choose one conversation. Review and edit the extracted text before using any AI.</p>
+</div>
+<div class="workflow-card" data-workflow="3">
+<strong>3. Map, then govern</strong>
+<p>Generate a Thinking Timeline, Decision Log, or Memory Governance prompt for the selected text only.</p>
+</div>
+</div>
+<div class="card-body">
+<div class="dropzone" id="dropzone">
+<div class="section-title">Drop conversations.json here</div>
+<div class="small">or choose a file manually</div>
+<label class="file-label" for="zipInput">Choose file</label>
+<input accept=".zip,.json,application/zip,application/x-zip-compressed,application/json" id="zipInput" type="file"/>
+</div>
+<div class="status" id="loadStatus">Ready. No file loaded.</div>
+<div class="stats">
+<div class="stat">
+<strong id="chatCount">0</strong>
+<span>conversations</span>
+</div>
+<div class="stat">
+<strong id="selectedCount">0</strong>
+<span>selected messages</span>
+</div>
+</div>
+<div class="field">
+<label for="searchInput">Search conversations</label>
+<input id="searchInput" placeholder="Search title or message text..."/>
+</div>
+<div class="row">
+<div class="field">
+<label for="sortSelect">Sort</label>
+<select id="sortSelect">
+<option value="updatedDesc">Updated newest</option>
+<option value="updatedAsc">Updated oldest</option>
+<option value="titleAsc">Title A-Z</option>
+<option value="messagesDesc">Most messages</option>
+</select>
+</div>
+<div class="field">
+<label for="limitSelect">List limit</label>
+<select id="limitSelect">
+<option value="50">50</option>
+<option selected="" value="100">100</option>
+<option value="250">250</option>
+<option value="99999">All</option>
+</select>
+</div>
+</div>
+<div class="section-title">Conversations</div>
+<div class="chat-list" id="chatList">
+<div class="hint">Load conversations.json to show conversations.</div>
+</div>
+<div class="actions">
+<button class="secondary" id="loadSampleBtn" type="button">Load Sample</button>
+<button class="danger" id="resetBtn" type="button">Reset</button>
+</div>
+</div>
+</section>
+<section class="card">
+<div class="card-header">
+<h2>2. Review Selected Chat</h2>
+<p>Check the extracted conversation before creating a prompt. You can edit this text manually.</p>
+</div>
+<div class="card-body">
+<div class="field">
+<label for="selectedTitle">Selected conversation title</label>
+<input id="selectedTitle" placeholder="No conversation selected"/>
+</div>
+<div class="stats">
+<div class="stat">
+<strong id="charCount">0</strong>
+<span>characters</span>
+</div>
+<div class="stat">
+<strong id="approxTokens">0</strong>
+<span>rough tokens</span>
+</div>
+</div>
+<div class="field">
+<label for="chatText">Extracted conversation text</label>
+<textarea id="chatText" placeholder="Select a conversation to show extracted text here..."></textarea>
+</div>
+<div class="actions">
+<button class="secondary" id="copyChatBtn" type="button">Copy Chat Text</button>
+<button class="secondary" id="downloadChatBtn" type="button">Download Chat .txt</button>
+<button class="ghost" id="clearChatBtn" type="button">Clear Text</button>
+</div>
+<div class="hint">
+          v1.1 officially supports ChatGPT export <code>conversations.json</code>. ZIP loading is experimental; if it fails, unzip the export and load conversations.json directly.
+        </div>
+</div>
+</section>
+<section class="card">
+<div class="card-header">
+<h2>3. Generate Index Prompt</h2>
+<p>Create a copy-paste prompt for ChatGPT, Gemini, Claude, or another AI.</p>
+</div>
+<div class="card-body">
+<div class="row">
+<div class="field">
+<label for="modeSelect">Mode</label>
+<select id="modeSelect">
+<option selected="" value="mvp">MVP: Timeline + Governance</option>
+<option value="thinking">Thinking Timeline</option>
+<option value="decisionlog">Decision Log</option>
+<option value="governance">Memory Governance</option>
+<option value="full">Full Conversation Index</option>
+<option value="compact">Compact Index</option>
+<option value="review">Next Chat Review Map</option>
+</select>
+</div>
+<div class="field">
+<label for="languageSelect">Output language</label>
+<select id="languageSelect">
+<option value="same">Same as conversation</option>
+<option value="en">English</option>
+<option value="ja">Japanese</option>
+<option value="zh">Chinese</option>
+<option value="ko">Korean</option>
+<option value="both">English + Japanese</option>
+</select>
+</div>
+</div>
+<div class="row">
+<div class="field">
+<label for="targetSelect">Target AI</label>
+<select id="targetSelect">
+<option value="generic">Generic</option>
+<option value="gpt">Structure / GPT</option>
+<option value="gemini">Expansion / Gemini</option>
+<option value="claude">Critique / Claude</option>
+</select>
+</div>
+<div class="field">
+<label for="promptTypeSelect">Prompt mode</label>
+<select id="promptTypeSelect">
+<option value="withText">With selected chat text</option>
+<option value="instructionOnly">Instruction only</option>
+</select>
+</div>
+</div>
+<div class="checks">
+<label class="check"><input checked="" id="includeAnchors" type="checkbox"/> Include useful anchors / search terms</label>
+<label class="check"><input checked="" id="includeRisks" type="checkbox"/> Include boundary risks / topic-mixing warnings</label>
+<label class="check"><input checked="" id="includeNext" type="checkbox"/> Include suggested next review</label>
+<label class="check"><input id="includeQuotes" type="checkbox"/> Include short representative quotes only when useful</label>
+</div>
+<div class="actions">
+<button class="primary" id="generatePromptBtn" type="button">Generate Prompt</button>
+<button class="secondary" id="copyPromptBtn" type="button">Copy Prompt</button>
+<button class="secondary" id="downloadPromptBtn" type="button">Download Prompt</button>
+</div>
+<div class="field">
+<label for="promptOutput">Generated prompt</label>
+<textarea id="promptOutput" placeholder="Generated prompt will appear here..." readonly=""></textarea>
+</div>
+<div class="status" id="promptStatus">Ready.</div>
+</div>
+</section>
+</main>
+<footer>
+<div style="display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center;justify-content:space-between;">
+<div>© ZEN LAMP PROJECT<br><span style="color:var(--muted);font-size:13px;">Based in Aomori, Japan</span></br></div>
+<div style="display:flex;flex-wrap:wrap;gap:12px;">
+<a href="mailto:info@zen-lamp.com">info@zen-lamp.com</a>
+<a href="https://github.com/sniioka5127-alt" rel="noopener" target="_blank">GitHub</a>
+<a href="https://wakouzan-kichijoji.com/" rel="noopener" target="_blank">Field background</a>
+<a href="/contact/">Contact</a>
+<a href="/privacy/">Privacy Policy</a>
+<a href="/disclaimer/">Disclaimer</a>
+</div>
+</div>
+</footer>
+<script>
+    const $ = (id) => document.getElementById(id);
+
+    let conversations = [];
+    let filtered = [];
+    let selectedConversation = null;
+
+    const state = {
+      zipName: "",
+      conversationsPath: ""
+    };
+
+    function setStatus(el, msg, type = "") {
+      el.textContent = msg;
+      el.className = "status" + (type ? " " + type : "");
+    }
+
+    function fmtDate(ts) {
+      if (!ts) return "unknown date";
+      let d;
+      if (typeof ts === "number") {
+        d = new Date(ts > 100000000000 ? ts : ts * 1000);
+      } else {
+        d = new Date(ts);
+      }
+      if (Number.isNaN(d.getTime())) return "unknown date";
+      return d.toLocaleString();
+    }
+
+    function escapeHtml(s) {
+      return String(s || "").replace(/[&<>"']/g, c => ({
+        "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+      }[c]));
+    }
+
+    function readUInt16(view, offset) { return view.getUint16(offset, true); }
+    function readUInt32(view, offset) { return view.getUint32(offset, true); }
+
+    function decodeUtf8(bytes) {
+      return new TextDecoder("utf-8").decode(bytes);
+    }
+
+    async function inflateRaw(bytes) {
+      if (!("DecompressionStream" in window)) {
+        throw new Error("This browser does not support native ZIP decompression. Try a recent Chrome or Edge.");
+      }
+      const ds = new DecompressionStream("deflate-raw");
+      const stream = new Blob([bytes]).stream().pipeThrough(ds);
+      const ab = await new Response(stream).arrayBuffer();
+      return new Uint8Array(ab);
+    }
+
+    async function readZipEntries(file) {
+      const buffer = await file.arrayBuffer();
+      const data = new Uint8Array(buffer);
+      const view = new DataView(buffer);
+
+      const minEOCD = 22;
+      const maxComment = 0xffff;
+      const start = Math.max(0, data.length - minEOCD - maxComment);
+
+      let eocd = -1;
+      for (let i = data.length - minEOCD; i >= start; i--) {
+        if (readUInt32(view, i) === 0x06054b50) {
+          eocd = i;
+          break;
+        }
+      }
+      if (eocd < 0) throw new Error(currentT("errorCentralDirectory"));
+
+      const totalEntries = readUInt16(view, eocd + 10);
+      const centralDirOffset = readUInt32(view, eocd + 16);
+
+      const entries = [];
+      let ptr = centralDirOffset;
+
+      for (let i = 0; i < totalEntries; i++) {
+        if (readUInt32(view, ptr) !== 0x02014b50) break;
+
+        const compressionMethod = readUInt16(view, ptr + 10);
+        const compressedSize = readUInt32(view, ptr + 20);
+        const uncompressedSize = readUInt32(view, ptr + 24);
+        const nameLen = readUInt16(view, ptr + 28);
+        const extraLen = readUInt16(view, ptr + 30);
+        const commentLen = readUInt16(view, ptr + 32);
+        const localHeaderOffset = readUInt32(view, ptr + 42);
+        const nameBytes = data.slice(ptr + 46, ptr + 46 + nameLen);
+        const name = decodeUtf8(nameBytes);
+
+        entries.push({
+          name, compressionMethod, compressedSize, uncompressedSize, localHeaderOffset
+        });
+
+        ptr += 46 + nameLen + extraLen + commentLen;
+      }
+
+      async function getText(entry) {
+        const local = entry.localHeaderOffset;
+        if (readUInt32(view, local) !== 0x04034b50) {
+          throw new Error("Invalid local ZIP header for " + entry.name);
+        }
+
+        const nameLen = readUInt16(view, local + 26);
+        const extraLen = readUInt16(view, local + 28);
+        const dataStart = local + 30 + nameLen + extraLen;
+        const comp = data.slice(dataStart, dataStart + entry.compressedSize);
+
+        let bytes;
+        if (entry.compressionMethod === 0) {
+          bytes = comp;
+        } else if (entry.compressionMethod === 8) {
+          bytes = await inflateRaw(comp);
+        } else {
+          throw new Error("Unsupported ZIP compression method " + entry.compressionMethod + " for " + entry.name);
+        }
+        return decodeUtf8(bytes);
+      }
+
+      return { entries, getText };
+    }
+
+    function extractMessageText(message) {
+      if (!message || !message.content) return "";
+      const content = message.content;
+
+      if (Array.isArray(content.parts)) {
+        return content.parts.map(part => {
+          if (typeof part === "string") return part;
+          if (part && typeof part === "object") {
+            if (typeof part.text === "string") return part.text;
+            if (typeof part.content === "string") return part.content;
+            return JSON.stringify(part);
+          }
+          return String(part ?? "");
+        }).join("\n").trim();
+      }
+
+      if (typeof content.text === "string") return content.text.trim();
+      if (Array.isArray(content.text)) return content.text.join("\n").trim();
+      if (typeof content === "string") return content.trim();
+
+      return "";
+    }
+
+    function normalizeRole(role) {
+      if (!role) return "unknown";
+      if (role === "assistant") return "Assistant";
+      if (role === "user") return "User";
+      if (role === "system") return "System";
+      if (role === "tool") return "Tool";
+      return role.charAt(0).toUpperCase() + role.slice(1);
+    }
+
+    function parseChatGPTConversations(rawJson) {
+      const arr = JSON.parse(rawJson);
+      if (!Array.isArray(arr)) throw new Error("conversations.json is not an array.");
+
+      return arr.map((conv, index) => {
+        const title = conv.title || `Untitled ${index + 1}`;
+        const mapping = conv.mapping || {};
+        const nodes = Object.values(mapping);
+
+        const messages = nodes
+          .map(node => node && node.message ? node.message : null)
+          .filter(Boolean)
+          .filter(msg => msg.author && msg.author.role !== "system")
+          .map(msg => {
+            const text = extractMessageText(msg);
+            return {
+              id: msg.id || "",
+              role: normalizeRole(msg.author && msg.author.role),
+              rawRole: msg.author && msg.author.role,
+              create_time: msg.create_time || 0,
+              text
+            };
+          })
+          .filter(m => m.text && m.text.trim())
+          .sort((a, b) => (a.create_time || 0) - (b.create_time || 0));
+
+        const text = formatConversationText({ title, messages, create_time: conv.create_time, update_time: conv.update_time });
+
+        return {
+          index,
+          id: conv.id || String(index),
+          title,
+          create_time: conv.create_time || 0,
+          update_time: conv.update_time || conv.create_time || 0,
+          messages,
+          text,
+          messageCount: messages.length,
+          charCount: text.length
+        };
+      }).filter(c => c.messages.length > 0);
+    }
+
+    function formatConversationText(conv) {
+      const lines = [];
+      lines.push(`# ${conv.title || "Untitled conversation"}`);
+      if (conv.create_time) lines.push(`Created: ${fmtDate(conv.create_time)}`);
+      if (conv.update_time) lines.push(`Updated: ${fmtDate(conv.update_time)}`);
+      lines.push("");
+      for (const msg of conv.messages || []) {
+        const t = (msg.text || "").trim();
+        if (!t) continue;
+        lines.push(`## ${msg.role}${msg.create_time ? " — " + fmtDate(msg.create_time) : ""}`);
+        lines.push(t);
+        lines.push("");
+      }
+      return lines.join("\n");
+    }
+
+    function updateStats() {
+      const text = $("chatText").value || "";
+      $("charCount").textContent = text.length.toLocaleString();
+      $("approxTokens").textContent = Math.ceil(text.length / 4).toLocaleString();
+      $("selectedCount").textContent = selectedConversation ? selectedConversation.messageCount.toLocaleString() : "0";
+    }
+
+    function renderList() {
+      const q = $("searchInput").value.trim().toLowerCase();
+      const sort = $("sortSelect").value;
+      const limit = Number($("limitSelect").value);
+
+      filtered = conversations.filter(c => {
+        if (!q) return true;
+        return (c.title || "").toLowerCase().includes(q) || (c.text || "").toLowerCase().includes(q);
+      });
+
+      filtered.sort((a, b) => {
+        if (sort === "updatedAsc") return (a.update_time || 0) - (b.update_time || 0);
+        if (sort === "titleAsc") return (a.title || "").localeCompare(b.title || "");
+        if (sort === "messagesDesc") return (b.messageCount || 0) - (a.messageCount || 0);
+        return (b.update_time || 0) - (a.update_time || 0);
+      });
+
+      const list = $("chatList");
+      list.innerHTML = "";
+
+      const show = filtered.slice(0, limit);
+      if (!show.length) {
+        list.innerHTML = `<div class="hint">No conversations found.</div>`;
+        return;
+      }
+
+      for (const c of show) {
+        const div = document.createElement("div");
+        div.className = "chat-item" + (selectedConversation && selectedConversation.id === c.id ? " active" : "");
+        div.innerHTML = `
+          <div class="chat-title">${escapeHtml(c.title)}</div>
+          <div class="chat-meta">
+            <span>${escapeHtml(fmtDate(c.update_time))}</span>
+            <span>${c.messageCount.toLocaleString()} messages</span>
+            <span>${c.charCount.toLocaleString()} chars</span>
+          </div>
+        `;
+        div.addEventListener("click", () => selectConversation(c));
+        list.appendChild(div);
+      }
+
+      if (filtered.length > show.length) {
+        const more = document.createElement("div");
+        more.className = "hint";
+        more.textContent = `Showing ${show.length.toLocaleString()} of ${filtered.length.toLocaleString()} matches. Increase List limit to see more.`;
+        list.appendChild(more);
+      }
+    }
+
+    function selectConversation(c) {
+      selectedConversation = c;
+      $("selectedTitle").value = c.title;
+      $("chatText").value = c.text;
+      updateStats();
+      renderList();
+      setStatus($("promptStatus"), currentT("statusSelectedReady"), "ok");
+    }
+
+    async function handleZipFile(file) {
+      try {
+        if (!file) return;
+        state.zipName = file.name;
+        setStatus($("loadStatus"), tFormat("statusReading", { name: file.name }), "warn");
+
+        const lowerName = (file.name || "").toLowerCase();
+        const firstBytes = new Uint8Array(await file.slice(0, 8).arrayBuffer());
+        const looksJson = lowerName.endsWith(".json") || firstBytes[0] === 0x5b || firstBytes[0] === 0x7b;
+
+        let text = "";
+        let sourceName = "";
+
+        if (looksJson) {
+          text = await file.text();
+          sourceName = file.name || "conversations.json";
+          state.conversationsPath = sourceName;
+        } else {
+          if (!(firstBytes[0] === 0x50 && firstBytes[1] === 0x4b)) {
+            throw new Error(currentT("errorNotZip"));
+          }
+
+          const zip = await readZipEntries(file);
+          const entry = zip.entries.find(e => /(^|\/)conversations\.json$/i.test(e.name));
+
+          if (!entry) {
+            const jsonNames = zip.entries.filter(e => /\.json$/i.test(e.name)).map(e => e.name).slice(0, 10).join(", ");
+            throw new Error("Could not find conversations.json in this ZIP. JSON files found: " + (jsonNames || "none"));
+          }
+
+          state.conversationsPath = entry.name;
+          text = await zip.getText(entry);
+          sourceName = entry.name;
+        }
+
+        conversations = parseChatGPTConversations(text);
+        filtered = conversations.slice();
+        selectedConversation = null;
+        $("chatCount").textContent = conversations.length.toLocaleString();
+        $("selectedCount").textContent = "0";
+        $("selectedTitle").value = "";
+        $("chatText").value = "";
+        $("promptOutput").value = "";
+        updateStats();
+        renderList();
+
+        setStatus($("loadStatus"), tFormat("statusLoaded", { count: conversations.length.toLocaleString(), name: sourceName }), "ok");
+      } catch (err) {
+        console.error(err);
+        setStatus($("loadStatus"), (err.message || String(err)), "bad");
+      }
+    }
+
+    function getModeInstruction(mode) {
+      const sections = {
+        mvp: `Create a practical Chat Atlas v0.3 analysis with these sections:
+
+0. VALIDITY CHECK
+First decide whether this conversation contains meaningful movement in thinking.
+If it is mostly informational, transactional, or too brief, say so in one sentence, then still extract any useful decisions if present.
+
+1. THINKING TRAJECTORY
+Do not summarize the topics. Describe how the thinking moved.
+Where did it start?
+Where did it turn?
+Where did it land?
+Was the shape linear, spiraling, divergent then convergent, circular, or mixed?
+
+2. TURNING POINTS
+List moments where the framing, question, assumption, priority, or direction changed.
+For each:
+- approximate location in the conversation
+- what changed
+- whether it was gradual drift or sudden leap
+- why it mattered
+
+3. DECISION LOG
+List decisions made or implied in the conversation.
+For each decision:
+- what was decided
+- why it was decided
+- what alternatives were rejected or postponed
+- what uncertainty remains
+
+4. INCUBATION LAYER
+List unresolved questions, tensions, abandoned paths, small discoveries, or remarks that may become useful later.
+
+5. MEMORY GOVERNANCE
+Classify what should be carried forward:
+- Keep: durable context worth preserving
+- Update: old context that should be revised
+- Temporary: useful only for the near term
+- Drop: no longer useful
+- Do Not Carry Forward: context that may mislead future work
+
+6. NEXT CHAT HANDOFF
+Create a concise handoff note for continuing this work in another AI chat.`,
+
+        thinking: `Create a Thinking Timeline analysis.
+
+0. VALIDITY CHECK
+First decide whether this conversation contains meaningful movement in thinking.
+If it is mostly informational, transactional, or too brief, state that clearly.
+
+1. THINKING TRAJECTORY
+Describe the movement of thought, not just the topics.
+Where did it start, where did it turn, and where did it land?
+
+2. TURNING POINTS
+Identify specific turns where something significant happened.
+For each:
+- approximate location
+- what shifted
+- drift or leap
+- why it mattered
+
+3. SIGNAL TYPES
+Where useful, classify turning points as:
+- Conscious Shift: the user recognized a change in their own thinking
+- Unprocessed Depth: a deeper frame was introduced but not explored
+- Heard But Not Integrated: a point was acknowledged but not absorbed into later reasoning
+- Pattern Emergence: a pattern only visible across multiple turns
+
+4. INCUBATION LAYER
+List unresolved tensions, abandoned paths, and small discoveries that may surface later.`,
+
+        decisionlog: `Create a Decision Log.
+
+Do not summarize the whole conversation.
+Extract decisions, changes in direction, and reasons.
+
+For each decision, provide:
+1. Decision
+What was decided?
+
+2. Reason
+Why was it decided?
+
+3. Alternatives
+What options were rejected, postponed, or left open?
+
+4. Evidence / Context
+What part of the conversation supported the decision?
+
+5. Stability
+Is this decision stable, tentative, or dependent on future review?
+
+6. Carry-forward note
+Should this decision be kept, updated, temporary, dropped, or explicitly not carried forward?`,
+
+        governance: `Create a Memory Governance review.
+
+The goal is not to remember everything.
+The goal is to decide what deserves to continue.
+
+Classify the conversation into:
+
+1. KEEP
+Durable context worth preserving for future chats.
+
+2. UPDATE
+Previously useful context that should be revised.
+
+3. TEMPORARY
+Context useful only for this immediate task or short-term workflow.
+
+4. DROP
+Context that no longer needs to be carried forward.
+
+5. DO NOT CARRY FORWARD
+Context that may mislead future work, revive old assumptions, or create confusion.
+
+6. NEXT CHAT HANDOFF
+A short, clean handoff note for a new AI chat.
+
+Important:
+Do not let the AI silently decide what matters.
+Make the carry-forward logic explicit.`,
+
+        full: `Create a full Conversation Index with these sections:
+1. Main Topics
+2. Topic Map
+3. Timeline
+4. Decisions
+5. Open Questions
+6. Repeated Themes
+7. Useful Anchors
+8. Suggested Next Review
+9. Memory Governance Notes`,
+
+        compact: `Create a compact Conversation Index with these sections:
+1. Main Topics
+2. Key Decisions
+3. Open Questions
+4. Useful Anchors
+5. What Should Be Carried Forward
+6. What Should Not Be Carried Forward`,
+
+        review: `Create a Next Chat Review Map that helps the user continue the work in a new chat.
+Focus on:
+1. What this chat was mainly about
+2. What must be remembered
+3. What should not be mixed in
+4. What needs review
+5. What to do first in the next chat`
+      };
+      return sections[mode] || sections.mvp;
+    }
+
+    function getTargetInstruction(target) {
+      const targets = {
+        generic: "Use a balanced, model-neutral indexing style.",
+        gpt: "Use a structured, concise, implementation-oriented style. Prioritize hierarchy, decisions, and next actions.",
+        gemini: "Use an expansive style. Notice adjacent ideas, future possibilities, and cross-domain connections, but clearly label speculation.",
+        claude: "Use a careful critique-oriented style. Identify boundaries, risks, contradictions, overclaims, and what should not be carried forward."
+      };
+      return targets[target] || targets.generic;
+    }
+
+    function getLanguageInstruction(language) {
+      const languages = {
+        same: "Write the index in the same main language as the conversation.",
+        en: "Write the index in English.",
+        ja: "Write the index in Japanese.",
+        zh: "Write the index in Chinese.",
+        ko: "Write the index in Korean.",
+        both: "Write the index in English first, then provide a Japanese version or brief Japanese notes where helpful."
+      };
+      return languages[language] || languages.same;
+    }
+
+    function buildOptionalInstructions() {
+      const list = [];
+      if ($("includeAnchors").checked) list.push("- Include useful anchors: distinctive phrases, project names, file names, people, tools, decisions, and search terms that help the user find this part again.");
+      if ($("includeRisks").checked) list.push("- Include boundary risks: places where unrelated projects, personal views, official statements, fiction, policy, or implementation details may become mixed.");
+      if ($("includeNext").checked) list.push("- Include suggested next review: the specific parts of the conversation the user should revisit first.");
+      if ($("includeQuotes").checked) list.push("- Include short representative quotes only when they are genuinely useful as anchors. Do not over-quote.");
+      if (!list.length) list.push("- Keep the index clean and navigable.");
+      return list.join("\n");
+    }
+
+    function generatePrompt() {
+      const chatText = $("chatText").value.trim();
+      const title = $("selectedTitle").value.trim() || "Selected conversation";
+      const promptType = $("promptTypeSelect").value;
+
+      if (promptType === "withText" && !chatText) {
+        setStatus($("promptStatus"), currentT("statusSelectOrPaste"), "bad");
+        return;
+      }
+
+      const conversationBlock = promptType === "withText"
+        ? `Conversation:
+"""
+${chatText}
+"""`
+        : `Conversation:
+Paste the selected conversation below this line before running the prompt.`;
+
+      const prompt = `Please create a Conversation Index for the following long AI conversation.
+
+Do not simply summarize it.
+Map where important topics, decisions, open questions, and useful anchors appear in the conversation.
+
+Project / conversation title: ${title}
+
+Core principle:
+A document can be summarized.
+But a thinking process needs to be mapped.
+
+A summary preserves conclusions.
+A thinking map preserves navigability and reconstructability.
+
+Indexing instructions:
+${getModeInstruction($("modeSelect").value)}
+
+Target style:
+${getTargetInstruction($("targetSelect").value)}
+
+Language:
+${getLanguageInstruction($("languageSelect").value)}
+
+Additional requirements:
+${buildOptionalInstructions()}
+
+Important:
+- Separate confirmed facts, decisions, interpretations, and speculation.
+- Do not invent details that are not in the conversation.
+- If the conversation contains mixed projects, clearly separate them.
+- If something is stale, tentative, or needs review, label it clearly.
+- The goal is not to preserve everything.
+- The goal is to help the user decide what deserves to continue.
+- Separate what was said, why it mattered, and what should or should not be carried forward.
+
+${conversationBlock}`;
+
+      $("promptOutput").value = prompt;
+      setStatus($("promptStatus"), currentT("statusPromptGenerated"), "ok");
+    }
+
+    async function copyText(text, statusEl, label = "Copied.") {
+      if (!text || !text.trim()) {
+        setStatus(statusEl, currentT("statusNothingToCopy"), "bad");
+        return;
+      }
+      try {
+        await navigator.clipboard.writeText(text);
+        setStatus(statusEl, label, "ok");
+      } catch (e) {
+        setStatus(statusEl, currentT("statusCopyFailed"), "bad");
+      }
+    }
+
+    function downloadText(filename, text, statusEl) {
+      if (!text || !text.trim()) {
+        setStatus(statusEl, currentT("statusNothingToDownload"), "bad");
+        return;
+      }
+      const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+      setStatus(statusEl, currentT("statusDownloaded"), "ok");
+    }
+
+    function safeFileName(s) {
+      return (s || "conversation")
+        .replace(/[\\/:*?"<>|]+/g, "-")
+        .replace(/\s+/g, " ")
+        .trim()
+        .slice(0, 80) || "conversation";
+    }
+
+    function loadSample() {
+      conversations = [{
+        id: "sample",
+        title: "Sample — ZEN LAMP Chat Atlas",
+        create_time: Date.now() / 1000,
+        update_time: Date.now() / 1000,
+        messages: [
+          { role: "User", create_time: Date.now()/1000 - 300, text: "I want to load a ChatGPT export ZIP directly." },
+          { role: "Assistant", create_time: Date.now()/1000 - 250, text: "That would be the natural v1.1 for ZEN LAMP Chat Atlas: load ZIP, find conversations.json, list chats, select one, generate an index prompt." },
+          { role: "User", create_time: Date.now()/1000 - 200, text: "雑談の中にも発見があるので、全部を地図化できると便利です。" },
+          { role: "Assistant", create_time: Date.now()/1000 - 150, text: "Exactly. Conversation Index should map where discoveries happened, not just summarize the final conclusion." }
+        ],
+        messageCount: 4,
+        charCount: 0,
+        text: ""
+      }];
+      conversations[0].text = formatConversationText(conversations[0]);
+      conversations[0].charCount = conversations[0].text.length;
+      $("chatCount").textContent = "1";
+      selectedConversation = null;
+      renderList();
+      selectConversation(conversations[0]);
+      setStatus($("loadStatus"), currentT("statusSampleLoaded"), "ok");
+    }
+
+    function resetAll() {
+      conversations = [];
+      filtered = [];
+      selectedConversation = null;
+      $("chatCount").textContent = "0";
+      $("selectedCount").textContent = "0";
+      $("selectedTitle").value = "";
+      $("chatText").value = "";
+      $("promptOutput").value = "";
+      $("searchInput").value = "";
+      $("chatList").innerHTML = `<div class="hint">${currentT("chatListHint")}</div>`;
+      updateStats();
+      setStatus($("loadStatus"), currentT("readyZip"));
+      setStatus($("promptStatus"), currentT("ready"));
+    }
+
+    const dropzone = $("dropzone");
+
+    dropzone.addEventListener("dragover", (e) => {
+      e.preventDefault();
+      dropzone.classList.add("drag");
+    });
+
+    dropzone.addEventListener("dragleave", () => {
+      dropzone.classList.remove("drag");
+    });
+
+    dropzone.addEventListener("drop", (e) => {
+      e.preventDefault();
+      dropzone.classList.remove("drag");
+      const file = e.dataTransfer.files && e.dataTransfer.files[0];
+      if (file) handleZipFile(file);
+    });
+
+    $("zipInput").addEventListener("change", (e) => {
+      const file = e.target.files && e.target.files[0];
+      if (file) handleZipFile(file);
+    });
+
+    $("searchInput").addEventListener("input", renderList);
+    $("sortSelect").addEventListener("change", renderList);
+    $("limitSelect").addEventListener("change", renderList);
+    $("chatText").addEventListener("input", updateStats);
+
+    $("generatePromptBtn").addEventListener("click", generatePrompt);
+    $("copyPromptBtn").addEventListener("click", () => copyText($("promptOutput").value, $("promptStatus"), currentT("statusPromptCopied")));
+    $("downloadPromptBtn").addEventListener("click", () => downloadText(`conversation-index-prompt-${safeFileName($("selectedTitle").value)}.txt`, $("promptOutput").value, $("promptStatus")));
+
+    $("copyChatBtn").addEventListener("click", () => copyText($("chatText").value, $("promptStatus"), currentT("statusChatCopied")));
+    $("downloadChatBtn").addEventListener("click", () => downloadText(`${safeFileName($("selectedTitle").value)}.txt`, $("chatText").value, $("promptStatus")));
+    $("clearChatBtn").addEventListener("click", () => {
+      $("chatText").value = "";
+      updateStats();
+      setStatus($("promptStatus"), currentT("statusTextCleared"));
+    });
+
+    $("loadSampleBtn").addEventListener("click", loadSample);
+    $("resetBtn").addEventListener("click", resetAll);
+
+
+
+
+    const i18n = {
+      en: {
+        subtitle: "Load conversations.json locally, choose a conversation, and turn it into Thinking Timeline, Decision Log, and Memory Governance prompts. ZIP loading remains experimental.",
+        badge: "Local-only / No upload",
+        notice: "<strong>Privacy note:</strong> This page reads conversations.json inside your browser. It does not upload files, call an AI API, use telemetry, or send text to a server. Use it offline if you want. For sensitive data, review the selected chat before copying anything into an AI tool.",
+        positionNotice: "<strong>v1.1 Position:</strong> This is not an API-connected app yet. It is a local-first proof-of-concept for the ZEN LAMP idea: <em>A document can be summarized. But a thinking process needs to be mapped.</em> Use it to select a conversation, generate a high-quality analysis prompt, and paste only the selected text into the AI of your choice.",
+        hLoad: "1. Load conversations.json",
+        pLoad: "Open your ChatGPT data export ZIP once, then drop the <code>conversations.json</code> file here. ZIP loading is also available, but JSON is recommended.",
+        corePrincipleHtml: "<strong>Core principle</strong><br>A document can be summarized. But a thinking process needs to be mapped.<br>The goal is not to remember everything. The goal is to decide what deserves to continue.",
+        workflow1Title: "1. Load locally",
+        workflow1Text: "Drop <code>conversations.json</code> from your ChatGPT export. The file is read inside your browser and is not uploaded by this HTML tool.",
+        workflow2Title: "2. Select intentionally",
+        workflow2Text: "Choose one conversation. Review and edit the extracted text before using any AI.",
+        workflow3Title: "3. Map, then govern",
+        workflow3Text: "Generate a Thinking Timeline, Decision Log, or Memory Governance prompt for the selected text only.",
+        dropTitle: "Drop conversations.json here",
+        dropSmall: "or choose a file manually",
+        chooseZip: "Choose file",
+        search: "Search conversations",
+        searchPh: "Search title or message text...",
+        sort: "Sort",
+        listLimit: "List limit",
+        conversations: "Conversations",
+        chatListHint: "Load conversations.json to show conversations.",
+        hReview: "2. Review Selected Chat",
+        pReview: "Check the extracted conversation before creating a prompt. You can edit this text manually.",
+        selectedTitle: "Selected conversation title",
+        selectedTitlePh: "No conversation selected",
+        extracted: "Extracted conversation text",
+        extractedPh: "Select a conversation to show extracted text here...",
+        copyChat: "Copy Chat Text",
+        downloadChat: "Download Chat .txt",
+        clearText: "Clear Text",
+        exportHint: "v1.1 officially supports ChatGPT export <code>conversations.json</code>. ZIP loading is experimental; if it fails, unzip the export and load conversations.json directly.",
+        hPrompt: "3. Generate Index Prompt",
+        pPrompt: "Create a copy-paste prompt for ChatGPT, Gemini, Claude, or another AI.",
+        mode: "Mode",
+        outputLang: "Output language",
+        targetAI: "Target AI",
+        promptType: "Prompt mode",
+        includeAnchors: "Include useful anchors / search terms",
+        includeRisks: "Include boundary risks / topic-mixing warnings",
+        includeNext: "Include suggested next review",
+        includeQuotes: "Include short representative quotes only when useful",
+        generate: "Generate Prompt",
+        copyPrompt: "Copy Prompt",
+        downloadPrompt: "Download Prompt",
+        generated: "Generated prompt",
+        generatedPh: "Generated prompt will appear here...",
+        loadSample: "Load Sample",
+        reset: "Reset",
+        readyZip: "Ready. No file loaded.",
+        ready: "Ready.",
+        errorNotZip: "The selected file does not look like a ZIP file. Choose the original ChatGPT export .zip, or unzip it and choose conversations.json directly.",
+        errorCentralDirectory: "Could not read the ZIP central directory. The file may be damaged or not a standard ZIP. Try the original ChatGPT export .zip, or unzip it and load conversations.json directly.",
+        statsConvs: "conversations",
+        statsMessages: "selected messages",
+        statsChars: "characters",
+        statsTokens: "rough tokens",
+        uiLangTitle: "UI Language",
+        sortUpdatedDesc: "Updated newest",
+        sortUpdatedAsc: "Updated oldest",
+        sortTitleAsc: "Title A-Z",
+        sortMessagesDesc: "Most messages",
+        limitAll: "All",
+        modeMvp: "MVP: Timeline + Governance",
+        modeThinking: "Thinking Timeline",
+        modeDecision: "Decision Log",
+        modeGovernance: "Memory Governance",
+        modeFull: "Full Conversation Index",
+        modeCompact: "Compact Index",
+        modeReview: "Next Chat Review Map",
+        outSame: "Same as conversation",
+        outEn: "English",
+        outJa: "Japanese",
+        outZh: "Chinese",
+        outKo: "Korean",
+        outBoth: "English + Japanese",
+        targetGeneric: "Generic",
+        targetGpt: "Structure / GPT",
+        targetGemini: "Expansion / Gemini",
+        targetClaude: "Critique / Claude",
+        promptWithText: "With selected chat text",
+        promptInstructionOnly: "Instruction only",
+        statusSelectedReady: "Selected conversation ready.",
+        statusReading: "Reading {name} locally...",
+        statusLoaded: "Loaded {count} conversations from {name}.",
+        statusSelectOrPaste: "Select or paste a conversation first.",
+        statusPromptGenerated: "Prompt generated.",
+        statusNothingToCopy: "Nothing to copy.",
+        statusCopied: "Copied.",
+        statusCopyFailed: "Copy failed. Select the text manually.",
+        statusNothingToDownload: "Nothing to download.",
+        statusDownloaded: "Downloaded.",
+        statusSampleLoaded: "Sample loaded.",
+        statusTextCleared: "Chat text cleared.",
+        statusPromptCopied: "Prompt copied.",
+        statusChatCopied: "Chat text copied."
+      },
+      ja: {
+        subtitle: "ChatGPTエクスポート内の conversations.json をローカルで読み込み、Thinking Timeline、Decision Log、Memory Governance用プロンプトを生成します。ZIP読み込みは実験扱いです。",
+        badge: "ローカル専用 / アップロードなし",
+        notice: "<strong>プライバシー：</strong>このページは conversations.json をブラウザ内で読み込みます。ファイル送信、AI API呼び出し、テレメトリ、サーバー送信は行いません。必要ならオフラインでも使えます。機密情報はAIへ貼る前に必ず確認してください。",
+        positionNotice: "<strong>v1.1 の位置づけ：</strong>これはまだAPI接続アプリではありません。ZEN LAMP構想のためのローカルファーストな概念実証です。<em>文書は要約できる。しかし、思考の過程は地図化しなければならない。</em> 会話を選び、高品質な分析プロンプトを生成し、必要な本文だけを任意のAIへ貼るために使います。",
+        hLoad: "1. conversations.jsonを読み込む",
+        pLoad: "ChatGPTのデータエクスポートZIPを一度解凍し、中にある <code>conversations.json</code> を入れてください。ZIP読み込みも残していますが、JSON直接読み込みを推奨します。",
+        corePrincipleHtml: "<strong>Core principle</strong><br>文書は要約できる。しかし、思考の過程は地図化しなければならない。<br>目標はすべてを覚えることではありません。何を次に持ち越すべきかを選ぶことです。",
+        workflow1Title: "1. ローカルで読む",
+        workflow1Text: "ChatGPTエクスポート内の <code>conversations.json</code> を入れます。ファイルはブラウザ内で読み込まれ、このHTMLツールから外部へ送信されません。",
+        workflow2Title: "2. 意図して選ぶ",
+        workflow2Text: "会話を一つ選びます。AIへ使う前に、抽出された本文を確認・編集します。",
+        workflow3Title: "3. 地図化して統治する",
+        workflow3Text: "選んだ本文に対して、Thinking Timeline、Decision Log、Memory Governance のプロンプトを生成します。",
+        dropTitle: "conversations.json をここにドロップ",
+        dropSmall: "またはファイルを選択",
+        chooseZip: "ファイルを選択",
+        search: "会話を検索",
+        searchPh: "タイトルまたは本文で検索...",
+        sort: "並び替え",
+        listLimit: "表示数",
+        conversations: "会話一覧",
+        chatListHint: "conversations.jsonを読み込むと会話一覧が表示されます。",
+        hReview: "2. 選択した会話を確認",
+        pReview: "プロンプト生成前に抽出内容を確認します。この本文は手動で編集できます。",
+        selectedTitle: "選択中の会話タイトル",
+        selectedTitlePh: "会話が選択されていません",
+        extracted: "抽出された会話本文",
+        extractedPh: "会話を選択するとここに本文が表示されます...",
+        copyChat: "会話本文をコピー",
+        downloadChat: "会話を.txt保存",
+        clearText: "本文をクリア",
+        exportHint: "v1.1 は ChatGPT export の <code>conversations.json</code> 直接読み込みを正式対応とします。ZIP読み込みは実験扱いです。読めない場合はZIPを解凍して conversations.json を選択してください。",
+        hPrompt: "3. Indexプロンプトを生成",
+        pPrompt: "ChatGPT / Gemini / Claude などに貼るためのプロンプトを作成します。",
+        mode: "モード",
+        outputLang: "出力言語",
+        targetAI: "対象AI",
+        promptType: "プロンプトモード",
+        includeAnchors: "検索用アンカー語を含める",
+        includeRisks: "境界リスク・話題混入警告を含める",
+        includeNext: "次に見直す箇所を含める",
+        includeQuotes: "有用な場合のみ短い代表引用を含める",
+        generate: "プロンプト生成",
+        copyPrompt: "プロンプトをコピー",
+        downloadPrompt: "プロンプト保存",
+        generated: "生成プロンプト",
+        generatedPh: "生成されたプロンプトがここに表示されます...",
+        loadSample: "サンプル読込",
+        reset: "リセット",
+        readyZip: "準備完了。ファイル未読込。",
+        ready: "準備完了。",
+        errorNotZip: "選択されたファイルはZIPとして認識できません。ChatGPTのエクスポート元ZIPを選ぶか、解凍して conversations.json を直接選択してください。",
+        errorCentralDirectory: "ZIPの中央ディレクトリを読み取れませんでした。ZIPが破損しているか、標準的なZIPではない可能性があります。解凍して conversations.json を直接読み込む方法も使えます。",
+        statsConvs: "会話",
+        statsMessages: "選択中メッセージ",
+        statsChars: "文字数",
+        statsTokens: "概算トークン",
+        uiLangTitle: "UI言語",
+        sortUpdatedDesc: "更新が新しい順",
+        sortUpdatedAsc: "更新が古い順",
+        sortTitleAsc: "タイトル A-Z",
+        sortMessagesDesc: "メッセージ数が多い順",
+        limitAll: "すべて",
+        modeMvp: "MVP: タイムライン + ガバナンス",
+        modeThinking: "Thinking Timeline（思考の流れ）",
+        modeDecision: "Decision Log（意思決定ログ）",
+        modeGovernance: "Memory Governance（記憶統治）",
+        modeFull: "Full Conversation Index（完全版）",
+        modeCompact: "Compact Index（簡易版）",
+        modeReview: "Next Chat Review Map（次チャット用）",
+        outSame: "会話と同じ言語",
+        outEn: "英語",
+        outJa: "日本語",
+        outZh: "中国語",
+        outKo: "韓国語",
+        outBoth: "英語 + 日本語",
+        targetGeneric: "汎用",
+        targetGpt: "構造化 / GPT",
+        targetGemini: "拡張 / Gemini",
+        targetClaude: "批評 / Claude",
+        promptWithText: "選択した会話本文つき",
+        promptInstructionOnly: "指示文のみ",
+        statusSelectedReady: "選択した会話を読み込みました。",
+        statusReading: "{name} をローカルで読み込み中...",
+        statusLoaded: "{name} から {count} 件の会話を読み込みました。",
+        statusSelectOrPaste: "先に会話を選ぶか本文を貼ってください。",
+        statusPromptGenerated: "プロンプトを生成しました。",
+        statusNothingToCopy: "コピーする内容がありません。",
+        statusCopied: "コピーしました。",
+        statusCopyFailed: "コピーに失敗しました。手動で選択してください。",
+        statusNothingToDownload: "保存する内容がありません。",
+        statusDownloaded: "保存しました。",
+        statusSampleLoaded: "サンプルを読み込みました。",
+        statusTextCleared: "会話本文をクリアしました。",
+        statusPromptCopied: "プロンプトをコピーしました。",
+        statusChatCopied: "会話本文をコピーしました。"
+      },
+      zh: {
+        subtitle: "在本地读取 ChatGPT 导出中的 conversations.json，选择一个会话，并生成 Thinking Timeline、Decision Log 和 Memory Governance 提示词。ZIP 读取仍为实验功能。",
+        badge: "本地运行 / 不上传",
+        notice: "<strong>隐私说明：</strong>本页面在浏览器内读取 conversations.json。不会上传文件、调用 AI API、使用遥测或把文本发送到服务器。需要时可离线使用。敏感数据在复制到任何 AI 工具前请先检查。",
+        positionNotice: "<strong>v1.1 定位：</strong>这还不是一个连接 API 的应用，而是面向 ZEN LAMP 理念的本地优先概念验证。<em>文档可以被摘要，但思考过程需要被映射。</em> 你可以用它选择一个会话、生成高质量分析提示词，并只把需要的文本粘贴到你选择的 AI 中。",
+        hLoad: "1. 读取 conversations.json",
+        pLoad: "请先解压 ChatGPT 数据导出 ZIP，然后拖入其中的 <code>conversations.json</code>。ZIP 读取仍保留，但推荐直接使用 JSON。",
+        corePrincipleHtml: "<strong>核心原则</strong><br>文档可以被摘要，但思考过程需要被映射。<br>目标不是记住一切，而是决定什么值得继续带到下一次对话。",
+        workflow1Title: "1. 本地读取",
+        workflow1Text: "拖入 ChatGPT 导出中的 <code>conversations.json</code>。文件会在浏览器内读取，不会被这个 HTML 工具上传。",
+        workflow2Title: "2. 有意识地选择",
+        workflow2Text: "选择一个会话。在交给任何 AI 之前，先检查并编辑提取出的文本。",
+        workflow3Title: "3. 先映射，再治理",
+        workflow3Text: "仅针对所选文本生成 Thinking Timeline、Decision Log 或 Memory Governance 提示词。",
+        dropTitle: "将 conversations.json 拖到这里",
+        dropSmall: "或手动选择文件",
+        chooseZip: "选择文件",
+        search: "搜索会话",
+        searchPh: "搜索标题或消息正文...",
+        sort: "排序",
+        listLimit: "显示数量",
+        conversations: "会话列表",
+        chatListHint: "加载 conversations.json 后，会在这里显示会话列表。",
+        hReview: "2. 检查所选会话",
+        pReview: "生成提示词前先检查抽取的会话内容。你可以手动编辑文本。",
+        selectedTitle: "所选会话标题",
+        selectedTitlePh: "尚未选择会话",
+        extracted: "抽取的会话文本",
+        extractedPh: "选择会话后，文本会显示在这里...",
+        copyChat: "复制会话文本",
+        downloadChat: "下载会话 .txt",
+        clearText: "清空文本",
+        exportHint: "v1.1 正式支持直接读取 ChatGPT 导出中的 <code>conversations.json</code>。ZIP 读取为实验功能；如果失败，请解压后直接载入 conversations.json。",
+        hPrompt: "3. 生成索引提示词",
+        pPrompt: "为 ChatGPT、Gemini、Claude 或其他 AI 创建可复制粘贴的提示词。",
+        mode: "模式",
+        outputLang: "输出语言",
+        targetAI: "目标 AI",
+        promptType: "提示词模式",
+        includeAnchors: "包含有用锚点 / 搜索词",
+        includeRisks: "包含边界风险 / 主题混杂提醒",
+        includeNext: "包含建议复查位置",
+        includeQuotes: "仅在有用时包含短引用",
+        generate: "生成提示词",
+        copyPrompt: "复制提示词",
+        downloadPrompt: "下载提示词",
+        generated: "生成的提示词",
+        generatedPh: "生成的提示词会显示在这里...",
+        loadSample: "加载示例",
+        reset: "重置",
+        readyZip: "准备就绪。未加载文件。",
+        ready: "准备就绪。",
+        errorNotZip: "所选文件似乎不是 ZIP。请选择原始 ChatGPT 导出 .zip，或解压后直接选择 conversations.json。",
+        errorCentralDirectory: "无法读取 ZIP 中央目录。文件可能已损坏或不是标准 ZIP。请尝试原始 ChatGPT 导出 .zip，或解压后直接载入 conversations.json。",
+        statsConvs: "会话",
+        statsMessages: "所选消息",
+        statsChars: "字符数",
+        statsTokens: "粗略 tokens",
+        uiLangTitle: "界面语言",
+        sortUpdatedDesc: "按更新时间（新到旧）",
+        sortUpdatedAsc: "按更新时间（旧到新）",
+        sortTitleAsc: "标题 A-Z",
+        sortMessagesDesc: "消息数最多",
+        limitAll: "全部",
+        modeMvp: "MVP：时间线 + 治理",
+        modeThinking: "Thinking Timeline（思考时间线）",
+        modeDecision: "Decision Log（决策日志）",
+        modeGovernance: "Memory Governance（记忆治理）",
+        modeFull: "Full Conversation Index（完整索引）",
+        modeCompact: "Compact Index（简洁索引）",
+        modeReview: "Next Chat Review Map（下一会话复盘图）",
+        outSame: "与会话相同",
+        outEn: "英语",
+        outJa: "日语",
+        outZh: "中文",
+        outKo: "韩语",
+        outBoth: "英语 + 日语",
+        targetGeneric: "通用",
+        targetGpt: "结构化 / GPT",
+        targetGemini: "扩展 / Gemini",
+        targetClaude: "批评 / Claude",
+        promptWithText: "附带所选会话文本",
+        promptInstructionOnly: "仅指令",
+        statusSelectedReady: "已准备好所选会话。",
+        statusReading: "正在本地读取 {name}...",
+        statusLoaded: "已从 {name} 读取 {count} 个会话。",
+        statusSelectOrPaste: "请先选择会话或粘贴文本。",
+        statusPromptGenerated: "提示词已生成。",
+        statusNothingToCopy: "没有可复制的内容。",
+        statusCopied: "已复制。",
+        statusCopyFailed: "复制失败。请手动选择文本。",
+        statusNothingToDownload: "没有可下载的内容。",
+        statusDownloaded: "已下载。",
+        statusSampleLoaded: "示例已加载。",
+        statusTextCleared: "会话文本已清空。",
+        statusPromptCopied: "提示词已复制。",
+        statusChatCopied: "会话文本已复制。"
+      },
+      ko: {
+        subtitle: "ChatGPT 내보내기 파일 안의 conversations.json을 로컬에서 읽고 Thinking Timeline, Decision Log, Memory Governance 프롬프트를 생성합니다. ZIP 읽기는 실험 기능입니다.",
+        badge: "로컬 전용 / 업로드 없음",
+        notice: "<strong>개인정보 안내:</strong> 이 페이지는 conversations.json을 브라우저 안에서 읽습니다. 파일 업로드, AI API 호출, 텔레메트리, 서버 전송을 하지 않습니다. 원하면 오프라인에서도 사용할 수 있습니다. 민감한 데이터는 AI 도구에 복사하기 전에 반드시 확인하세요.",
+        positionNotice: "<strong>v1.1 위치:</strong> 이것은 아직 API 연결 앱이 아니라 ZEN LAMP 아이디어를 위한 로컬 우선 개념 증명입니다. <em>문서는 요약할 수 있지만, 사고 과정은 지도화되어야 합니다.</em> 하나의 대화를 선택하고, 고품질 분석 프롬프트를 만든 뒤, 필요한 본문만 원하는 AI에 붙여 넣는 용도로 사용하세요.",
+        hLoad: "1. conversations.json 불러오기",
+        pLoad: "ChatGPT 데이터 내보내기 ZIP을 한 번 압축 해제한 뒤, 그 안의 <code>conversations.json</code> 파일을 넣으세요. ZIP 읽기도 남겨두지만 JSON 직접 읽기를 권장합니다.",
+        corePrincipleHtml: "<strong>핵심 원칙</strong><br>문서는 요약할 수 있지만, 사고 과정은 지도화되어야 합니다.<br>목표는 모든 것을 기억하는 것이 아니라, 무엇을 다음 대화로 이어갈지 결정하는 것입니다.",
+        workflow1Title: "1. 로컬에서 읽기",
+        workflow1Text: "ChatGPT export 안의 <code>conversations.json</code>을 넣으세요. 파일은 브라우저 안에서 읽히며, 이 HTML 도구가 업로드하지 않습니다.",
+        workflow2Title: "2. 의도적으로 선택하기",
+        workflow2Text: "대화 하나를 선택하세요. 어떤 AI에 사용하기 전에 추출된 텍스트를 검토하고 수정하세요.",
+        workflow3Title: "3. 지도화하고, 그다음 통치하기",
+        workflow3Text: "선택한 텍스트에 대해서만 Thinking Timeline, Decision Log, Memory Governance 프롬프트를 생성하세요.",
+        dropTitle: "conversations.json을 여기에 드롭",
+        dropSmall: "또는 파일을 직접 선택",
+        chooseZip: "파일 선택",
+        search: "대화 검색",
+        searchPh: "제목 또는 메시지 본문 검색...",
+        sort: "정렬",
+        listLimit: "표시 수",
+        conversations: "대화 목록",
+        chatListHint: "conversations.json을 불러오면 여기에 대화 목록이 표시됩니다.",
+        hReview: "2. 선택한 대화 확인",
+        pReview: "프롬프트를 만들기 전에 추출된 대화를 확인하세요. 이 텍스트는 직접 편집할 수 있습니다.",
+        selectedTitle: "선택한 대화 제목",
+        selectedTitlePh: "선택된 대화가 없습니다",
+        extracted: "추출된 대화 텍스트",
+        extractedPh: "대화를 선택하면 여기에 텍스트가 표시됩니다...",
+        copyChat: "대화 텍스트 복사",
+        downloadChat: "대화 .txt 저장",
+        clearText: "텍스트 지우기",
+        exportHint: "v1.1은 ChatGPT export의 <code>conversations.json</code> 직접 읽기를 공식 지원합니다. ZIP 읽기는 실험 기능입니다. 실패할 경우 ZIP을 해제하고 conversations.json을 직접 선택하세요.",
+        hPrompt: "3. 인덱스 프롬프트 생성",
+        pPrompt: "ChatGPT, Gemini, Claude 또는 다른 AI에 붙여 넣을 프롬프트를 만듭니다.",
+        mode: "모드",
+        outputLang: "출력 언어",
+        targetAI: "대상 AI",
+        promptType: "프롬프트 모드",
+        includeAnchors: "유용한 앵커 / 검색어 포함",
+        includeRisks: "경계 위험 / 주제 혼합 경고 포함",
+        includeNext: "다음 검토 위치 포함",
+        includeQuotes: "유용할 때만 짧은 대표 인용 포함",
+        generate: "프롬프트 생성",
+        copyPrompt: "프롬프트 복사",
+        downloadPrompt: "프롬프트 저장",
+        generated: "생성된 프롬프트",
+        generatedPh: "생성된 프롬프트가 여기에 표시됩니다...",
+        loadSample: "샘플 불러오기",
+        reset: "초기화",
+        readyZip: "준비 완료. 파일을 불러오지 않았습니다.",
+        ready: "준비 완료.",
+        errorNotZip: "선택한 파일이 ZIP 파일로 보이지 않습니다. 원본 ChatGPT 내보내기 .zip을 선택하거나 압축을 풀고 conversations.json을 직접 선택하세요.",
+        errorCentralDirectory: "ZIP 중앙 디렉터리를 읽을 수 없습니다. 파일이 손상되었거나 표준 ZIP이 아닐 수 있습니다. 원본 ChatGPT 내보내기 .zip을 사용하거나 압축을 풀어 conversations.json을 직접 불러오세요.",
+        statsConvs: "대화",
+        statsMessages: "선택된 메시지",
+        statsChars: "문자 수",
+        statsTokens: "대략 tokens",
+        uiLangTitle: "UI 언어",
+        sortUpdatedDesc: "최근 업데이트 순",
+        sortUpdatedAsc: "오래된 업데이트 순",
+        sortTitleAsc: "제목 A-Z",
+        sortMessagesDesc: "메시지 많은 순",
+        limitAll: "전체",
+        modeMvp: "MVP: 타임라인 + 거버넌스",
+        modeThinking: "Thinking Timeline(사고 흐름)",
+        modeDecision: "Decision Log(의사결정 로그)",
+        modeGovernance: "Memory Governance(기억 거버넌스)",
+        modeFull: "Full Conversation Index(전체판)",
+        modeCompact: "Compact Index(간단판)",
+        modeReview: "Next Chat Review Map(다음 채팅용)",
+        outSame: "대화와 같은 언어",
+        outEn: "영어",
+        outJa: "일본어",
+        outZh: "중국어",
+        outKo: "한국어",
+        outBoth: "영어 + 일본어",
+        targetGeneric: "일반형",
+        targetGpt: "구조화 / GPT",
+        targetGemini: "확장 / Gemini",
+        targetClaude: "비평 / Claude",
+        promptWithText: "선택한 대화 텍스트 포함",
+        promptInstructionOnly: "지시문만",
+        statusSelectedReady: "선택한 대화를 불러왔습니다.",
+        statusReading: "{name} 을(를) 로컬에서 읽는 중...",
+        statusLoaded: "{name} 에서 대화 {count}개를 불러왔습니다.",
+        statusSelectOrPaste: "먼저 대화를 선택하거나 텍스트를 붙여 넣으세요.",
+        statusPromptGenerated: "프롬프트를 생성했습니다.",
+        statusNothingToCopy: "복사할 내용이 없습니다.",
+        statusCopied: "복사했습니다.",
+        statusCopyFailed: "복사에 실패했습니다. 수동으로 텍스트를 선택하세요.",
+        statusNothingToDownload: "저장할 내용이 없습니다.",
+        statusDownloaded: "저장했습니다.",
+        statusSampleLoaded: "샘플을 불러왔습니다.",
+        statusTextCleared: "대화 텍스트를 지웠습니다.",
+        statusPromptCopied: "프롬프트를 복사했습니다.",
+        statusChatCopied: "대화 텍스트를 복사했습니다."
+      }
+    };
+
+    function currentT(key) {
+      const lang = $("uiLangSelect") ? $("uiLangSelect").value : "en";
+      return (i18n[lang] && i18n[lang][key]) || i18n.en[key] || key;
+    }
+
+    function tFormat(key, vars = {}) {
+      let s = currentT(key) || key;
+      Object.entries(vars).forEach(([k, v]) => {
+        s = s.replace(new RegExp(`\\{${k}\\}`, "g"), String(v));
+      });
+      return s;
+    }
+
+    function applyI18n(lang) {
+      const t = i18n[lang] || i18n.en;
+      document.documentElement.lang = lang;
+
+      document.querySelector(".subtitle").textContent = t.subtitle;
+      document.querySelector('[data-i18n="badge"]').textContent = t.badge;
+
+      document.querySelectorAll("[data-i18n-html]").forEach(node => {
+        const key = node.dataset.i18nHtml;
+        if (t[key]) node.innerHTML = t[key];
+      });
+
+      const uiLangSelect = $("uiLangSelect");
+      if (uiLangSelect) uiLangSelect.title = t.uiLangTitle;
+
+      const headers = document.querySelectorAll(".card-header h2");
+      const paras = document.querySelectorAll(".card-header p");
+      if (headers[0]) headers[0].textContent = t.hLoad;
+      if (paras[0]) paras[0].innerHTML = t.pLoad;
+      if (headers[1]) headers[1].textContent = t.hReview;
+      if (paras[1]) paras[1].textContent = t.pReview;
+      if (headers[2]) headers[2].textContent = t.hPrompt;
+      if (paras[2]) paras[2].textContent = t.pPrompt;
+
+      const workflowCards = document.querySelectorAll(".workflow-card");
+      if (workflowCards[0]) workflowCards[0].innerHTML = `<strong>${t.workflow1Title}</strong><p>${t.workflow1Text}</p>`;
+      if (workflowCards[1]) workflowCards[1].innerHTML = `<strong>${t.workflow2Title}</strong><p>${t.workflow2Text}</p>`;
+      if (workflowCards[2]) workflowCards[2].innerHTML = `<strong>${t.workflow3Title}</strong><p>${t.workflow3Text}</p>`;
+
+      document.querySelector(".dropzone .section-title").textContent = t.dropTitle;
+      document.querySelector(".dropzone .small").textContent = t.dropSmall;
+      document.querySelector(".file-label").textContent = t.chooseZip;
+
+      const labels = document.querySelectorAll("label");
+      const labelMap = {
+        searchInput: t.search,
+        sortSelect: t.sort,
+        limitSelect: t.listLimit,
+        selectedTitle: t.selectedTitle,
+        chatText: t.extracted,
+        modeSelect: t.mode,
+        languageSelect: t.outputLang,
+        targetSelect: t.targetAI,
+        promptTypeSelect: t.promptType,
+        promptOutput: t.generated
+      };
+      labels.forEach(label => {
+        const forId = label.getAttribute("for");
+        if (labelMap[forId]) label.textContent = labelMap[forId];
+      });
+
+      $("searchInput").placeholder = t.searchPh;
+      $("selectedTitle").placeholder = t.selectedTitlePh;
+      $("chatText").placeholder = t.extractedPh;
+      $("promptOutput").placeholder = t.generatedPh;
+
+      const sectionTitles = document.querySelectorAll(".section-title");
+      if (sectionTitles[1]) sectionTitles[1].textContent = t.conversations;
+      if (!selectedConversation && $("chatList").querySelector(".hint")) {
+        $("chatList").innerHTML = `<div class="hint">${t.chatListHint}</div>`;
+      }
+
+      $("copyChatBtn").textContent = t.copyChat;
+      $("downloadChatBtn").textContent = t.downloadChat;
+      $("clearChatBtn").textContent = t.clearText;
+      $("generatePromptBtn").textContent = t.generate;
+      $("copyPromptBtn").textContent = t.copyPrompt;
+      $("downloadPromptBtn").textContent = t.downloadPrompt;
+      $("loadSampleBtn").textContent = t.loadSample;
+      $("resetBtn").textContent = t.reset;
+
+      const checkLabels = document.querySelectorAll(".checks .check");
+      if (checkLabels[0]) checkLabels[0].lastChild.textContent = " " + t.includeAnchors;
+      if (checkLabels[1]) checkLabels[1].lastChild.textContent = " " + t.includeRisks;
+      if (checkLabels[2]) checkLabels[2].lastChild.textContent = " " + t.includeNext;
+      if (checkLabels[3]) checkLabels[3].lastChild.textContent = " " + t.includeQuotes;
+
+      const statSpans = document.querySelectorAll(".stat span");
+      if (statSpans[0]) statSpans[0].textContent = t.statsConvs;
+      if (statSpans[1]) statSpans[1].textContent = t.statsMessages;
+      if (statSpans[2]) statSpans[2].textContent = t.statsChars;
+      if (statSpans[3]) statSpans[3].textContent = t.statsTokens;
+
+      const exportHint = document.querySelectorAll(".card .hint")[1];
+      if (exportHint) exportHint.innerHTML = t.exportHint;
+
+      const sortOptions = $("sortSelect").options;
+      if (sortOptions[0]) sortOptions[0].textContent = t.sortUpdatedDesc;
+      if (sortOptions[1]) sortOptions[1].textContent = t.sortUpdatedAsc;
+      if (sortOptions[2]) sortOptions[2].textContent = t.sortTitleAsc;
+      if (sortOptions[3]) sortOptions[3].textContent = t.sortMessagesDesc;
+
+      const limitOptions = $("limitSelect").options;
+      if (limitOptions[3]) limitOptions[3].textContent = t.limitAll;
+
+      const modeOptions = $("modeSelect").options;
+      if (modeOptions[0]) modeOptions[0].textContent = t.modeMvp;
+      if (modeOptions[1]) modeOptions[1].textContent = t.modeThinking;
+      if (modeOptions[2]) modeOptions[2].textContent = t.modeDecision;
+      if (modeOptions[3]) modeOptions[3].textContent = t.modeGovernance;
+      if (modeOptions[4]) modeOptions[4].textContent = t.modeFull;
+      if (modeOptions[5]) modeOptions[5].textContent = t.modeCompact;
+      if (modeOptions[6]) modeOptions[6].textContent = t.modeReview;
+
+      const outOptions = $("languageSelect").options;
+      if (outOptions[0]) outOptions[0].textContent = t.outSame;
+      if (outOptions[1]) outOptions[1].textContent = t.outEn;
+      if (outOptions[2]) outOptions[2].textContent = t.outJa;
+      if (outOptions[3]) outOptions[3].textContent = t.outZh;
+      if (outOptions[4]) outOptions[4].textContent = t.outKo;
+      if (outOptions[5]) outOptions[5].textContent = t.outBoth;
+
+      const targetOptions = $("targetSelect").options;
+      if (targetOptions[0]) targetOptions[0].textContent = t.targetGeneric;
+      if (targetOptions[1]) targetOptions[1].textContent = t.targetGpt;
+      if (targetOptions[2]) targetOptions[2].textContent = t.targetGemini;
+      if (targetOptions[3]) targetOptions[3].textContent = t.targetClaude;
+
+      const promptTypeOptions = $("promptTypeSelect").options;
+      if (promptTypeOptions[0]) promptTypeOptions[0].textContent = t.promptWithText;
+      if (promptTypeOptions[1]) promptTypeOptions[1].textContent = t.promptInstructionOnly;
+
+      if (!$("zipInput").files.length && conversations.length === 0) setStatus($("loadStatus"), t.readyZip);
+      if (!$("promptOutput").value) setStatus($("promptStatus"), t.ready);
+      localStorage.setItem("zenLampChatAtlasUiLang", lang);
+    }
+    const savedLang = localStorage.getItem("zenLampChatAtlasUiLang") || "en";
+    if ($("uiLangSelect")) {
+      $("uiLangSelect").value = savedLang;
+      $("uiLangSelect").addEventListener("change", (e) => applyI18n(e.target.value));
+      applyI18n(savedLang);
+    }
+    updateStats();
+  </script>
+</body>
+</html>
