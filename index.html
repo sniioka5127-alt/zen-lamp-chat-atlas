@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 
-<!-- ZEN LAMP Chat Atlas v1.1: local-first PoC, no API connection. -->
+<!-- ZEN LAMP Chat Atlas v1.2: local-first PoC, no API connection. -->
 <html lang="en">
 <head>
 <meta charset="utf-8"/>
@@ -240,6 +240,23 @@
       font-family: var(--mono);
       font-size: .80rem;
       background: #fffdfa;
+    }
+
+
+    .manual-import {
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: rgba(255, 253, 247, .68);
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .manual-import textarea {
+      min-height: 170px;
+      font-family: var(--mono);
+      font-size: .80rem;
     }
 
     .field { display: flex; flex-direction: column; gap: 7px; }
@@ -487,8 +504,8 @@
 <header>
 <div class="top">
 <div>
-<h1>ZEN LAMP Chat Atlas v1.1</h1>
-<p class="subtitle">Load conversations.json locally, choose a conversation, and turn it into Thinking Timeline, Decision Log, and Memory Governance prompts — without uploading anything. ZIP loading remains experimental.</p>
+<h1>ZEN LAMP Chat Atlas v1.2</h1>
+<p class="subtitle">Load ChatGPT conversations.json, paste any AI log manually, or import .txt / .md files from Claude, Gemini, or other AIs — then turn them into Thinking Timeline, Decision Log, and Memory Governance prompts.</p>
 </div>
 <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
 <div class="badge"><span class="dot"></span><span data-i18n="badge">Local-only / No upload</span></div>
@@ -508,7 +525,7 @@
 </div>
 <div class="notice" style="margin-top:12px;">
 <div class="notice-inner" data-i18n-html="positionNotice">
-<strong>v1.1 Position:</strong> This is not an API-connected app yet. It is a local-first proof-of-concept for the ZEN LAMP idea:
+<strong>v1.2 Position:</strong> This is not an API-connected app yet. It is a local-first proof-of-concept for the ZEN LAMP idea:
         <em>A document can be summarized. But a thinking process needs to be mapped.</em>
         Use it to select a conversation, generate a high-quality analysis prompt, and paste only the selected text into the AI of your choice.
       </div>
@@ -516,8 +533,8 @@
 <main>
 <section class="card">
 <div class="card-header">
-<h2>1. Load conversations.json</h2>
-<p>Open your ChatGPT data export ZIP once, then drop the <code>conversations.json</code> file here. ZIP loading is also available, but JSON is recommended.</p>
+<h2>1. Load or paste a log</h2>
+<p>Use ChatGPT <code>conversations.json</code>, paste a copied AI conversation, or import <code>.txt</code> / <code>.md</code> logs from Claude, Gemini, or other AIs.</p>
 </div>
 <div class="principle-box" data-i18n-html="corePrincipleHtml">
 <strong>Core principle</strong><br/>
@@ -527,11 +544,11 @@
 <div class="workflow-grid">
 <div class="workflow-card" data-workflow="1">
 <strong>1. Load locally</strong>
-<p>Drop <code>conversations.json</code> from your ChatGPT export. The file is read inside your browser and is not uploaded by this HTML tool.</p>
+<p>Drop <code>conversations.json</code>, import <code>.txt</code> / <code>.md</code>, or paste copied logs. The file is read inside your browser and is not uploaded.</p>
 </div>
 <div class="workflow-card" data-workflow="2">
 <strong>2. Select intentionally</strong>
-<p>Choose one conversation. Review and edit the extracted text before using any AI.</p>
+<p>Choose one conversation or imported log. Review and edit the extracted text before using any AI.</p>
 </div>
 <div class="workflow-card" data-workflow="3">
 <strong>3. Map, then govern</strong>
@@ -543,7 +560,35 @@
 <div class="section-title">Drop conversations.json here</div>
 <div class="small">or choose a file manually</div>
 <label class="file-label" for="zipInput">Choose file</label>
-<input accept=".zip,.json,application/zip,application/x-zip-compressed,application/json" id="zipInput" type="file"/>
+<input accept=".zip,.json,.txt,.md,text/plain,text/markdown,application/zip,application/x-zip-compressed,application/json" id="zipInput" type="file"/>
+</div>
+<div class="manual-import" id="manualImportBox">
+<div class="section-title" data-manual="title">Export-free input</div>
+<div class="small" data-manual="help">Paste a copied log from ChatGPT, Claude, Gemini, or another AI. You can also import .txt / .md files with the file chooser above.</div>
+<div class="row">
+<div class="field">
+<label for="manualSourceSelect">Source</label>
+<select id="manualSourceSelect">
+<option value="Generic AI">Generic AI</option>
+<option value="ChatGPT">ChatGPT</option>
+<option value="Claude">Claude</option>
+<option value="Gemini">Gemini</option>
+<option value="Human Notes">Human Notes</option>
+</select>
+</div>
+<div class="field">
+<label for="manualTitleInput">Title</label>
+<input id="manualTitleInput" placeholder="Manual log title"/>
+</div>
+</div>
+<div class="field">
+<label for="manualTextInput">Paste log text</label>
+<textarea id="manualTextInput" placeholder="Paste a copied Claude / Gemini / ChatGPT conversation, Markdown note, or plain text log here..."></textarea>
+</div>
+<div class="actions">
+<button class="secondary" id="importManualBtn" type="button">Import pasted text</button>
+<button class="ghost" id="clearManualBtn" type="button">Clear paste box</button>
+</div>
 </div>
 <div class="status" id="loadStatus">Ready. No file loaded.</div>
 <div class="stats">
@@ -620,7 +665,7 @@
 <button class="ghost" id="clearChatBtn" type="button">Clear Text</button>
 </div>
 <div class="hint">
-          v1.1 officially supports ChatGPT export <code>conversations.json</code>. ZIP loading is experimental; if it fails, unzip the export and load conversations.json directly.
+          v1.2 supports multiple input paths: ChatGPT <code>conversations.json</code>, manual paste, and plain <code>.txt</code> / <code>.md</code> logs from Claude, Gemini, or other AIs. ZIP loading remains experimental.
         </div>
 </div>
 </section>
@@ -858,6 +903,68 @@
       return role.charAt(0).toUpperCase() + role.slice(1);
     }
 
+    function normalizeGenericText(rawText, source = "Generic AI", title = "Imported AI log") {
+      const clean = String(rawText || "").replace(/\r\n/g, "\n").trim();
+      if (!clean) throw new Error("No text was provided.");
+
+      const messages = [];
+      const rolePattern = /(^|\n)\s*(User|Human|Assistant|ChatGPT|GPT|Claude|Gemini|System|AI)\s*:\s*/gi;
+      const matches = [];
+      let m;
+      while ((m = rolePattern.exec(clean)) !== null) {
+        matches.push({ index: m.index + (m[1] ? m[1].length : 0), end: rolePattern.lastIndex, role: m[2] });
+      }
+
+      if (matches.length >= 2) {
+        for (let i = 0; i < matches.length; i++) {
+          const start = matches[i].end;
+          const end = i + 1 < matches.length ? matches[i + 1].index : clean.length;
+          const text = clean.slice(start, end).trim();
+          if (text) messages.push({
+            role: normalizeRole(matches[i].role.toLowerCase() === "human" ? "user" : matches[i].role.toLowerCase()),
+            create_time: 0,
+            text
+          });
+        }
+      }
+
+      if (!messages.length) {
+        messages.push({ role: source, create_time: 0, text: clean });
+      }
+
+      const conv = {
+        index: 0,
+        id: "manual-" + Date.now(),
+        title: title || `${source} imported log`,
+        source,
+        create_time: Date.now() / 1000,
+        update_time: Date.now() / 1000,
+        messages,
+        messageCount: messages.length,
+        charCount: 0,
+        text: ""
+      };
+      conv.text = formatConversationText(conv);
+      conv.text = `Source: ${source}\nInput path: Manual / text import\n\n` + conv.text;
+      conv.charCount = conv.text.length;
+      return conv;
+    }
+
+    function loadSingleImportedConversation(conv, statusMessage) {
+      conversations = [conv];
+      filtered = conversations.slice();
+      selectedConversation = null;
+      $("chatCount").textContent = "1";
+      $("selectedCount").textContent = "0";
+      $("selectedTitle").value = "";
+      $("chatText").value = "";
+      $("promptOutput").value = "";
+      updateStats();
+      renderList();
+      selectConversation(conv);
+      setStatus($("loadStatus"), statusMessage || `Imported 1 log from ${conv.source || "text"}.`, "ok");
+    }
+
     function parseChatGPTConversations(rawJson) {
       const arr = JSON.parse(rawJson);
       if (!Array.isArray(arr)) throw new Error("conversations.json is not an array.");
@@ -994,10 +1101,19 @@
         let text = "";
         let sourceName = "";
 
+        const looksText = lowerName.endsWith(".txt") || lowerName.endsWith(".md") || (file.type && file.type.startsWith("text/"));
+
         if (looksJson) {
           text = await file.text();
           sourceName = file.name || "conversations.json";
           state.conversationsPath = sourceName;
+        } else if (looksText) {
+          text = await file.text();
+          const source = $("manualSourceSelect") ? $("manualSourceSelect").value : "Generic AI";
+          const title = (file.name || "Imported text log").replace(/\.(txt|md)$/i, "");
+          const conv = normalizeGenericText(text, source, title);
+          loadSingleImportedConversation(conv, `Imported text / Markdown log: ${file.name}`);
+          return;
         } else {
           if (!(firstBytes[0] === 0x50 && firstBytes[1] === 0x4b)) {
             throw new Error(currentT("errorNotZip"));
@@ -1327,7 +1443,7 @@ ${conversationBlock}`;
         update_time: Date.now() / 1000,
         messages: [
           { role: "User", create_time: Date.now()/1000 - 300, text: "I want to load a ChatGPT export ZIP directly." },
-          { role: "Assistant", create_time: Date.now()/1000 - 250, text: "That would be the natural v1.1 for ZEN LAMP Chat Atlas: load ZIP, find conversations.json, list chats, select one, generate an index prompt." },
+          { role: "Assistant", create_time: Date.now()/1000 - 250, text: "That would be the natural v1.2 for ZEN LAMP Chat Atlas: load conversations.json, paste text, import txt/md logs, select one, and generate an index prompt." },
           { role: "User", create_time: Date.now()/1000 - 200, text: "雑談の中にも発見があるので、全部を地図化できると便利です。" },
           { role: "Assistant", create_time: Date.now()/1000 - 150, text: "Exactly. Conversation Index should map where discoveries happened, not just summarize the final conclusion." }
         ],
@@ -1358,6 +1474,23 @@ ${conversationBlock}`;
       updateStats();
       setStatus($("loadStatus"), currentT("readyZip"));
       setStatus($("promptStatus"), currentT("ready"));
+    }
+
+    function importManualText() {
+      try {
+        const raw = $("manualTextInput").value.trim();
+        if (!raw) {
+          setStatus($("loadStatus"), "Paste some text first, or import a .txt / .md file.", "bad");
+          return;
+        }
+        const source = $("manualSourceSelect").value || "Generic AI";
+        const title = $("manualTitleInput").value.trim() || `${source} pasted log`;
+        const conv = normalizeGenericText(raw, source, title);
+        loadSingleImportedConversation(conv, `Imported pasted ${source} log.`);
+      } catch (err) {
+        console.error(err);
+        setStatus($("loadStatus"), err.message || String(err), "bad");
+      }
     }
 
     const dropzone = $("dropzone");
@@ -1401,6 +1534,8 @@ ${conversationBlock}`;
     });
 
     $("loadSampleBtn").addEventListener("click", loadSample);
+    if ($("importManualBtn")) $("importManualBtn").addEventListener("click", importManualText);
+    if ($("clearManualBtn")) $("clearManualBtn").addEventListener("click", () => { $("manualTextInput").value = ""; setStatus($("loadStatus"), "Paste box cleared."); });
     $("resetBtn").addEventListener("click", resetAll);
 
 
@@ -1411,14 +1546,14 @@ ${conversationBlock}`;
         subtitle: "Load conversations.json locally, choose a conversation, and turn it into Thinking Timeline, Decision Log, and Memory Governance prompts. ZIP loading remains experimental.",
         badge: "Local-only / No upload",
         notice: "<strong>Privacy note:</strong> This page reads conversations.json inside your browser. It does not upload files, call an AI API, use telemetry, or send text to a server. Use it offline if you want. For sensitive data, review the selected chat before copying anything into an AI tool.",
-        positionNotice: "<strong>v1.1 Position:</strong> This is not an API-connected app yet. It is a local-first proof-of-concept for the ZEN LAMP idea: <em>A document can be summarized. But a thinking process needs to be mapped.</em> Use it to select a conversation, generate a high-quality analysis prompt, and paste only the selected text into the AI of your choice.",
-        hLoad: "1. Load conversations.json",
-        pLoad: "Open your ChatGPT data export ZIP once, then drop the <code>conversations.json</code> file here. ZIP loading is also available, but JSON is recommended.",
+        positionNotice: "<strong>v1.2 Position:</strong> This is not an API-connected app yet. It is a local-first proof-of-concept for the ZEN LAMP idea: <em>A document can be summarized. But a thinking process needs to be mapped.</em> Use it to select a conversation, generate a high-quality analysis prompt, and paste only the selected text into the AI of your choice.",
+        hLoad: "1. Load or paste a log",
+        pLoad: "Use ChatGPT <code>conversations.json</code>, paste a copied AI conversation, or import <code>.txt</code> / <code>.md</code> logs from Claude, Gemini, or other AIs.",
         corePrincipleHtml: "<strong>Core principle</strong><br>A document can be summarized. But a thinking process needs to be mapped.<br>The goal is not to remember everything. The goal is to decide what deserves to continue.",
         workflow1Title: "1. Load locally",
-        workflow1Text: "Drop <code>conversations.json</code> from your ChatGPT export. The file is read inside your browser and is not uploaded by this HTML tool.",
+        workflow1Text: "Drop <code>conversations.json</code>, import <code>.txt</code> / <code>.md</code>, or paste copied logs. The file is read inside your browser and is not uploaded.",
         workflow2Title: "2. Select intentionally",
-        workflow2Text: "Choose one conversation. Review and edit the extracted text before using any AI.",
+        workflow2Text: "Choose one conversation or imported log. Review and edit the extracted text before using any AI.",
         workflow3Title: "3. Map, then govern",
         workflow3Text: "Generate a Thinking Timeline, Decision Log, or Memory Governance prompt for the selected text only.",
         dropTitle: "Drop conversations.json here",
@@ -1439,7 +1574,7 @@ ${conversationBlock}`;
         copyChat: "Copy Chat Text",
         downloadChat: "Download Chat .txt",
         clearText: "Clear Text",
-        exportHint: "v1.1 officially supports ChatGPT export <code>conversations.json</code>. ZIP loading is experimental; if it fails, unzip the export and load conversations.json directly.",
+        exportHint: "v1.2 supports multiple input paths: ChatGPT <code>conversations.json</code>, manual paste, and plain <code>.txt</code> / <code>.md</code> logs from Claude, Gemini, or other AIs. ZIP loading remains experimental.",
         hPrompt: "3. Generate Index Prompt",
         pPrompt: "Create a copy-paste prompt for ChatGPT, Gemini, Claude, or another AI.",
         mode: "Mode",
@@ -1506,12 +1641,12 @@ ${conversationBlock}`;
         statusChatCopied: "Chat text copied."
       },
       ja: {
-        subtitle: "ChatGPTエクスポート内の conversations.json をローカルで読み込み、Thinking Timeline、Decision Log、Memory Governance用プロンプトを生成します。ZIP読み込みは実験扱いです。",
+        subtitle: "ChatGPT の conversations.json、手動貼り付け、Claude / Gemini / 他AIの .txt / .md ログをローカルで読み込み、Thinking Timeline、Decision Log、Memory Governance用プロンプトを生成します。",
         badge: "ローカル専用 / アップロードなし",
         notice: "<strong>プライバシー：</strong>このページは conversations.json をブラウザ内で読み込みます。ファイル送信、AI API呼び出し、テレメトリ、サーバー送信は行いません。必要ならオフラインでも使えます。機密情報はAIへ貼る前に必ず確認してください。",
-        positionNotice: "<strong>v1.1 の位置づけ：</strong>これはまだAPI接続アプリではありません。ZEN LAMP構想のためのローカルファーストな概念実証です。<em>文書は要約できる。しかし、思考の過程は地図化しなければならない。</em> 会話を選び、高品質な分析プロンプトを生成し、必要な本文だけを任意のAIへ貼るために使います。",
-        hLoad: "1. conversations.jsonを読み込む",
-        pLoad: "ChatGPTのデータエクスポートZIPを一度解凍し、中にある <code>conversations.json</code> を入れてください。ZIP読み込みも残していますが、JSON直接読み込みを推奨します。",
+        positionNotice: "<strong>v1.2 の位置づけ：</strong>これはまだAPI接続アプリではありません。ZEN LAMP構想のためのローカルファーストな概念実証です。<em>文書は要約できる。しかし、思考の過程は地図化しなければならない。</em> 会話を選び、高品質な分析プロンプトを生成し、必要な本文だけを任意のAIへ貼るために使います。",
+        hLoad: "1. ログを読み込む / 貼り付ける",
+        pLoad: "ChatGPT の <code>conversations.json</code>、コピーしたAI会話の貼り付け、Claude / Gemini / 他AIの <code>.txt</code> / <code>.md</code> ログ読み込みに対応します。",
         corePrincipleHtml: "<strong>Core principle</strong><br>文書は要約できる。しかし、思考の過程は地図化しなければならない。<br>目標はすべてを覚えることではありません。何を次に持ち越すべきかを選ぶことです。",
         workflow1Title: "1. ローカルで読む",
         workflow1Text: "ChatGPTエクスポート内の <code>conversations.json</code> を入れます。ファイルはブラウザ内で読み込まれ、このHTMLツールから外部へ送信されません。",
@@ -1537,7 +1672,7 @@ ${conversationBlock}`;
         copyChat: "会話本文をコピー",
         downloadChat: "会話を.txt保存",
         clearText: "本文をクリア",
-        exportHint: "v1.1 は ChatGPT export の <code>conversations.json</code> 直接読み込みを正式対応とします。ZIP読み込みは実験扱いです。読めない場合はZIPを解凍して conversations.json を選択してください。",
+        exportHint: "v1.2 は複数の入力方法に対応します。ChatGPT の <code>conversations.json</code>、手動貼り付け、Claude / Gemini / 他AIの <code>.txt</code> / <code>.md</code> ログを読み込めます。ZIP読み込みは実験扱いです。",
         hPrompt: "3. Indexプロンプトを生成",
         pPrompt: "ChatGPT / Gemini / Claude などに貼るためのプロンプトを作成します。",
         mode: "モード",
@@ -1604,12 +1739,12 @@ ${conversationBlock}`;
         statusChatCopied: "会話本文をコピーしました。"
       },
       zh: {
-        subtitle: "在本地读取 ChatGPT 导出中的 conversations.json，选择一个会话，并生成 Thinking Timeline、Decision Log 和 Memory Governance 提示词。ZIP 读取仍为实验功能。",
+        subtitle: "在本地读取 ChatGPT conversations.json、手动粘贴文本，或导入 Claude / Gemini / 其他 AI 的 .txt / .md 日志，并生成 Thinking Timeline、Decision Log 和 Memory Governance 提示词。",
         badge: "本地运行 / 不上传",
         notice: "<strong>隐私说明：</strong>本页面在浏览器内读取 conversations.json。不会上传文件、调用 AI API、使用遥测或把文本发送到服务器。需要时可离线使用。敏感数据在复制到任何 AI 工具前请先检查。",
-        positionNotice: "<strong>v1.1 定位：</strong>这还不是一个连接 API 的应用，而是面向 ZEN LAMP 理念的本地优先概念验证。<em>文档可以被摘要，但思考过程需要被映射。</em> 你可以用它选择一个会话、生成高质量分析提示词，并只把需要的文本粘贴到你选择的 AI 中。",
-        hLoad: "1. 读取 conversations.json",
-        pLoad: "请先解压 ChatGPT 数据导出 ZIP，然后拖入其中的 <code>conversations.json</code>。ZIP 读取仍保留，但推荐直接使用 JSON。",
+        positionNotice: "<strong>v1.2 定位：</strong>这还不是一个连接 API 的应用，而是面向 ZEN LAMP 理念的本地优先概念验证。<em>文档可以被摘要，但思考过程需要被映射。</em> 你可以用它选择一个会话、生成高质量分析提示词，并只把需要的文本粘贴到你选择的 AI 中。",
+        hLoad: "1. 读取或粘贴日志",
+        pLoad: "可使用 ChatGPT <code>conversations.json</code>、手动粘贴 AI 对话，或导入 Claude / Gemini / 其他 AI 的 <code>.txt</code> / <code>.md</code> 日志。",
         corePrincipleHtml: "<strong>核心原则</strong><br>文档可以被摘要，但思考过程需要被映射。<br>目标不是记住一切，而是决定什么值得继续带到下一次对话。",
         workflow1Title: "1. 本地读取",
         workflow1Text: "拖入 ChatGPT 导出中的 <code>conversations.json</code>。文件会在浏览器内读取，不会被这个 HTML 工具上传。",
@@ -1635,7 +1770,7 @@ ${conversationBlock}`;
         copyChat: "复制会话文本",
         downloadChat: "下载会话 .txt",
         clearText: "清空文本",
-        exportHint: "v1.1 正式支持直接读取 ChatGPT 导出中的 <code>conversations.json</code>。ZIP 读取为实验功能；如果失败，请解压后直接载入 conversations.json。",
+        exportHint: "v1.2 支持多种输入方式：ChatGPT <code>conversations.json</code>、手动粘贴，以及 Claude / Gemini / 其他 AI 的 <code>.txt</code> / <code>.md</code> 日志。ZIP 读取仍为实验功能。",
         hPrompt: "3. 生成索引提示词",
         pPrompt: "为 ChatGPT、Gemini、Claude 或其他 AI 创建可复制粘贴的提示词。",
         mode: "模式",
@@ -1702,12 +1837,12 @@ ${conversationBlock}`;
         statusChatCopied: "会话文本已复制。"
       },
       ko: {
-        subtitle: "ChatGPT 내보내기 파일 안의 conversations.json을 로컬에서 읽고 Thinking Timeline, Decision Log, Memory Governance 프롬프트를 생성합니다. ZIP 읽기는 실험 기능입니다.",
+        subtitle: "ChatGPT conversations.json, 수동 붙여넣기, Claude / Gemini / 기타 AI의 .txt / .md 로그를 로컬에서 읽고 Thinking Timeline, Decision Log, Memory Governance 프롬프트를 생성합니다.",
         badge: "로컬 전용 / 업로드 없음",
         notice: "<strong>개인정보 안내:</strong> 이 페이지는 conversations.json을 브라우저 안에서 읽습니다. 파일 업로드, AI API 호출, 텔레메트리, 서버 전송을 하지 않습니다. 원하면 오프라인에서도 사용할 수 있습니다. 민감한 데이터는 AI 도구에 복사하기 전에 반드시 확인하세요.",
-        positionNotice: "<strong>v1.1 위치:</strong> 이것은 아직 API 연결 앱이 아니라 ZEN LAMP 아이디어를 위한 로컬 우선 개념 증명입니다. <em>문서는 요약할 수 있지만, 사고 과정은 지도화되어야 합니다.</em> 하나의 대화를 선택하고, 고품질 분석 프롬프트를 만든 뒤, 필요한 본문만 원하는 AI에 붙여 넣는 용도로 사용하세요.",
-        hLoad: "1. conversations.json 불러오기",
-        pLoad: "ChatGPT 데이터 내보내기 ZIP을 한 번 압축 해제한 뒤, 그 안의 <code>conversations.json</code> 파일을 넣으세요. ZIP 읽기도 남겨두지만 JSON 직접 읽기를 권장합니다.",
+        positionNotice: "<strong>v1.2 위치:</strong> 이것은 아직 API 연결 앱이 아니라 ZEN LAMP 아이디어를 위한 로컬 우선 개념 증명입니다. <em>문서는 요약할 수 있지만, 사고 과정은 지도화되어야 합니다.</em> 하나의 대화를 선택하고, 고품질 분석 프롬프트를 만든 뒤, 필요한 본문만 원하는 AI에 붙여 넣는 용도로 사용하세요.",
+        hLoad: "1. 로그 불러오기 / 붙여넣기",
+        pLoad: "ChatGPT <code>conversations.json</code>, 복사한 AI 대화 붙여넣기, Claude / Gemini / 기타 AI의 <code>.txt</code> / <code>.md</code> 로그 가져오기를 지원합니다.",
         corePrincipleHtml: "<strong>핵심 원칙</strong><br>문서는 요약할 수 있지만, 사고 과정은 지도화되어야 합니다.<br>목표는 모든 것을 기억하는 것이 아니라, 무엇을 다음 대화로 이어갈지 결정하는 것입니다.",
         workflow1Title: "1. 로컬에서 읽기",
         workflow1Text: "ChatGPT export 안의 <code>conversations.json</code>을 넣으세요. 파일은 브라우저 안에서 읽히며, 이 HTML 도구가 업로드하지 않습니다.",
@@ -1733,7 +1868,7 @@ ${conversationBlock}`;
         copyChat: "대화 텍스트 복사",
         downloadChat: "대화 .txt 저장",
         clearText: "텍스트 지우기",
-        exportHint: "v1.1은 ChatGPT export의 <code>conversations.json</code> 직접 읽기를 공식 지원합니다. ZIP 읽기는 실험 기능입니다. 실패할 경우 ZIP을 해제하고 conversations.json을 직접 선택하세요.",
+        exportHint: "v1.2는 여러 입력 경로를 지원합니다. ChatGPT <code>conversations.json</code>, 수동 붙여넣기, Claude / Gemini / 기타 AI의 <code>.txt</code> / <code>.md</code> 로그를 읽을 수 있습니다. ZIP 읽기는 여전히 실험 기능입니다.",
         hPrompt: "3. 인덱스 프롬프트 생성",
         pPrompt: "ChatGPT, Gemini, Claude 또는 다른 AI에 붙여 넣을 프롬프트를 만듭니다.",
         mode: "모드",
@@ -1801,6 +1936,74 @@ ${conversationBlock}`;
       }
     };
 
+
+    const manualI18n = {
+      en: {
+        manualTitle: "Export-free input",
+        manualHelp: "Paste a copied log from ChatGPT, Claude, Gemini, or another AI. You can also import .txt / .md files with the file chooser above.",
+        manualSource: "Source",
+        manualLogTitle: "Title",
+        manualTitlePh: "Manual log title",
+        manualPasteLabel: "Paste log text",
+        manualPastePh: "Paste a copied Claude / Gemini / ChatGPT conversation, Markdown note, or plain text log here...",
+        importManual: "Import pasted text",
+        clearManual: "Clear paste box",
+        sourceGeneric: "Generic AI",
+        sourceChatGPT: "ChatGPT",
+        sourceClaude: "Claude",
+        sourceGemini: "Gemini",
+        sourceHuman: "Human Notes"
+      },
+      ja: {
+        manualTitle: "Export不要入力",
+        manualHelp: "ChatGPT、Claude、Gemini、その他AIからコピーしたログを貼り付けられます。上のファイル選択から .txt / .md も読み込めます。",
+        manualSource: "入力元",
+        manualLogTitle: "タイトル",
+        manualTitlePh: "手動ログのタイトル",
+        manualPasteLabel: "ログ本文を貼り付け",
+        manualPastePh: "Claude / Gemini / ChatGPT の会話、Markdownメモ、プレーンテキストログをここに貼り付けてください...",
+        importManual: "貼り付けたテキストを読み込む",
+        clearManual: "貼り付け欄をクリア",
+        sourceGeneric: "汎用AI",
+        sourceChatGPT: "ChatGPT",
+        sourceClaude: "Claude",
+        sourceGemini: "Gemini",
+        sourceHuman: "人間のメモ"
+      },
+      zh: {
+        manualTitle: "无需导出输入",
+        manualHelp: "可以粘贴从 ChatGPT、Claude、Gemini 或其他 AI 复制的日志，也可以通过上方文件选择器导入 .txt / .md 文件。",
+        manualSource: "来源",
+        manualLogTitle: "标题",
+        manualTitlePh: "手动日志标题",
+        manualPasteLabel: "粘贴日志文本",
+        manualPastePh: "在此粘贴复制的 Claude / Gemini / ChatGPT 对话、Markdown 笔记或纯文本日志...",
+        importManual: "导入粘贴文本",
+        clearManual: "清空粘贴框",
+        sourceGeneric: "通用 AI",
+        sourceChatGPT: "ChatGPT",
+        sourceClaude: "Claude",
+        sourceGemini: "Gemini",
+        sourceHuman: "人工笔记"
+      },
+      ko: {
+        manualTitle: "내보내기 없이 입력",
+        manualHelp: "ChatGPT, Claude, Gemini 또는 다른 AI에서 복사한 로그를 붙여넣을 수 있습니다. 위 파일 선택기로 .txt / .md 파일도 가져올 수 있습니다.",
+        manualSource: "출처",
+        manualLogTitle: "제목",
+        manualTitlePh: "수동 로그 제목",
+        manualPasteLabel: "로그 텍스트 붙여넣기",
+        manualPastePh: "Claude / Gemini / ChatGPT 대화, Markdown 메모, 일반 텍스트 로그를 여기에 붙여넣으세요...",
+        importManual: "붙여넣은 텍스트 가져오기",
+        clearManual: "붙여넣기 상자 지우기",
+        sourceGeneric: "일반 AI",
+        sourceChatGPT: "ChatGPT",
+        sourceClaude: "Claude",
+        sourceGemini: "Gemini",
+        sourceHuman: "사람 메모"
+      }
+    };
+
     function currentT(key) {
       const lang = $("uiLangSelect") ? $("uiLangSelect").value : "en";
       return (i18n[lang] && i18n[lang][key]) || i18n.en[key] || key;
@@ -1846,6 +2049,34 @@ ${conversationBlock}`;
       document.querySelector(".dropzone .section-title").textContent = t.dropTitle;
       document.querySelector(".dropzone .small").textContent = t.dropSmall;
       document.querySelector(".file-label").textContent = t.chooseZip;
+
+      const mt = manualI18n[lang] || manualI18n.en;
+      const manualTitleNode = document.querySelector('[data-manual="title"]');
+      const manualHelpNode = document.querySelector('[data-manual="help"]');
+      if (manualTitleNode) manualTitleNode.textContent = mt.manualTitle;
+      if (manualHelpNode) manualHelpNode.textContent = mt.manualHelp;
+      const manualSourceLabel = document.querySelector('label[for="manualSourceSelect"]');
+      const manualTitleLabel = document.querySelector('label[for="manualTitleInput"]');
+      const manualPasteLabel = document.querySelector('label[for="manualTextInput"]');
+      if (manualSourceLabel) manualSourceLabel.textContent = mt.manualSource;
+      if (manualTitleLabel) manualTitleLabel.textContent = mt.manualLogTitle;
+      if (manualPasteLabel) manualPasteLabel.textContent = mt.manualPasteLabel;
+      const manualTitleInput = $("manualTitleInput");
+      const manualTextInput = $("manualTextInput");
+      if (manualTitleInput) manualTitleInput.placeholder = mt.manualTitlePh;
+      if (manualTextInput) manualTextInput.placeholder = mt.manualPastePh;
+      const importManualBtn = $("importManualBtn");
+      const clearManualBtn = $("clearManualBtn");
+      if (importManualBtn) importManualBtn.textContent = mt.importManual;
+      if (clearManualBtn) clearManualBtn.textContent = mt.clearManual;
+      const manualSourceSelect = $("manualSourceSelect");
+      if (manualSourceSelect && manualSourceSelect.options.length >= 5) {
+        manualSourceSelect.options[0].textContent = mt.sourceGeneric;
+        manualSourceSelect.options[1].textContent = mt.sourceChatGPT;
+        manualSourceSelect.options[2].textContent = mt.sourceClaude;
+        manualSourceSelect.options[3].textContent = mt.sourceGemini;
+        manualSourceSelect.options[4].textContent = mt.sourceHuman;
+      }
 
       const labels = document.querySelectorAll("label");
       const labelMap = {
