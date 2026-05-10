@@ -21,6 +21,8 @@ It is not uploaded to a server.
 
 ## How to use
 
+### Option A: ChatGPT export
+
 1. Export your ChatGPT data.
 2. Unzip the export file.
 3. Find `conversations.json`.
@@ -28,10 +30,23 @@ It is not uploaded to a server.
 5. Load `conversations.json` in the browser.
 6. Select a conversation and generate a prompt.
 
+### Option B: Export-free input
+
+You can also paste a copied conversation manually, or import plain `.txt` / `.md` logs from ChatGPT, Claude, Gemini, or another AI.
+
+This makes `conversations.json` the cleanest path, but not the only path.
+
 ## Status
 
 Early prototype.  
-Current public version: v1.1
+Current public version: v1.2
+
+New in v1.2:
+
+- Manual paste input
+- `.txt` / `.md` import
+- Generic AI log support
+- Source labels for ChatGPT / Claude / Gemini / Generic AI / Human Notes
 
 ## Project page
 
