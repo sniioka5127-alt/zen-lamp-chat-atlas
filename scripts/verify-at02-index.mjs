@@ -36,4 +36,16 @@ for (const marker of forbidden) {
   if (html.includes(marker)) throw new Error(`AT-02 legacy runtime responsibility remains: ${marker}`);
 }
 
-console.log("AT-02 index verification passed.");
+const scriptBodies = [...html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/gi)]
+  .map(match => match[1])
+  .filter(body => body.trim());
+
+for (const [index, body] of scriptBodies.entries()) {
+  try {
+    new Function(body);
+  } catch (error) {
+    throw new Error(`AT-02 inline script ${index + 1} has invalid JavaScript syntax: ${error.message}`);
+  }
+}
+
+console.log("AT-02 index verification passed, including inline JavaScript syntax.");
