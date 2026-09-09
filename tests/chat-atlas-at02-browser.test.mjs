@@ -64,7 +64,7 @@ test("AT-02 browser parser follows the active ChatGPT branch", async () => {
 
   const parsed = runtime.parseChatGPTConversationsBranchAware([conv]);
   assert.equal(parsed.length, 1);
-  const texts = parsed[0].messages.map(m => m.text);
+  const texts = Array.from(parsed[0].messages, m => m.text);
   assert.deepEqual(texts, ["Question", "Chosen answer", "Follow-up"]);
   assert.equal(texts.includes("Regenerated sibling"), false);
   assert.equal(parsed[0].branch.alternative_branch_count, 1);
