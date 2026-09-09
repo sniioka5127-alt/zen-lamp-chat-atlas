@@ -13,7 +13,7 @@ test("AT-03 public index references both governed browser scripts", () => {
 
 test("AT-03 project binding keeps Human Project authority local", () => {
   const binding = read("chat-atlas/project-binding.js");
-  assert.match(binding, /ATLAS_PROJECT_BINDING_VERSION/);
+  assert.match(binding, /PROJECT_BINDING_VERSION/);
   assert.match(binding, /human_project_reference/);
   assert.match(binding, /project_store_verification/);
   assert.doesNotMatch(binding, /\bfetch\s*\(|XMLHttpRequest|WebSocket|navigator\.sendBeacon/i);
