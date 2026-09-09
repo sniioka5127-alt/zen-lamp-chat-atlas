@@ -688,6 +688,7 @@
 <label for="projectIdInput">Project ID (optional)</label>
 <input id="projectIdInput" placeholder="e.g. prj_hiraku_tools"/>
 <div class="hint">If left blank, the exported candidates remain portable and can be assigned to a project later.</div>
+<div class="status" id="projectBindingStatus">AT-03: No Human Project bound. Standalone portable mode.</div>
 </div>
 <div class="row">
 <div class="field">
@@ -777,6 +778,7 @@
 </div>
 </footer>
 <script src="./chat-atlas/browser-runtime.js"></script>
+<script src="./chat-atlas/project-binding.js"></script>
 <script>
     const $ = (id) => document.getElementById(id);
 
@@ -792,6 +794,53 @@
     function setStatus(el, msg, type = "") {
       el.textContent = msg;
       el.className = "status" + (type ? " " + type : "");
+    }
+
+    function currentProjectBinding() {
+      if (!window.ChatAtlasAT03) throw new Error("Chat Atlas AT-03 Project Binding runtime is unavailable.");
+      const binding = window.ChatAtlasAT03.resolveProjectBinding({
+        fragment: location.hash,
+        manualProjectId: $("projectIdInput")?.value || null
+      });
+      window.ChatAtlasAT03.assertBindingMayRouteContext(binding);
+      return binding;
+    }
+
+    function renderProjectBindingStatus(binding, error = null) {
+      const status = $("projectBindingStatus");
+      if (!status) return;
+      if (error) {
+        setStatus(status, error.message || String(error), "bad");
+        return;
+      }
+      if (binding?.state === "bound") {
+        const source = binding.source === "workspace_fragment" ? "One House fragment" : "manual local input";
+        setStatus(
+          status,
+          "AT-03: Bound to " + binding.project_id + " via " + source + ". Routing reference only; ProjectStore not verified. Project ID is not added to the external AI prompt.",
+          "ok"
+        );
+      } else {
+        setStatus(status, "AT-03: No Human Project bound. Standalone portable mode. Project ID is not sent to an AI provider.");
+      }
+    }
+
+    function bootstrapProjectBinding() {
+      const input = $("projectIdInput");
+      if (!input) return;
+      try {
+        if (!window.ChatAtlasAT03) throw new Error("Chat Atlas AT-03 Project Binding runtime is unavailable.");
+        const fragmentProjectId = window.ChatAtlasAT03.projectIdFromFragment(location.hash);
+        if (fragmentProjectId) {
+          input.value = fragmentProjectId;
+          input.readOnly = true;
+          input.title = "Bound by One House Workspace fragment. Reopen Chat Atlas from another Project to change it.";
+        }
+        renderProjectBindingStatus(currentProjectBinding());
+      } catch (error) {
+        input.readOnly = Boolean(window.ChatAtlasAT03?.projectIdFromFragment(location.hash));
+        renderProjectBindingStatus(null, error);
+      }
     }
 
     function fmtDate(ts) {
@@ -1228,7 +1277,8 @@
     }
 
     function buildContextItemEnvelope(parsed) {
-      const projectId = $("projectIdInput") ? $("projectIdInput").value.trim() : "";
+      const binding = currentProjectBinding();
+      const projectId = binding.project_id;
       const conversationId = selectedConversation?.id || null;
       const platform = selectedConversation?.source || "Generic AI";
       const seen = new Set();
@@ -1250,6 +1300,7 @@
         producer_contract: parsed.contract_version || window.ChatAtlasAT02.ATLAS_CONTRACT_VERSION,
         intended_state: "proposed",
         project_id: projectId || null,
+        project_binding: binding,
         conversation: {
           id: conversationId,
           title: $("selectedTitle").value.trim() || null,
@@ -1414,6 +1465,13 @@
     });
 
     $("searchInput").addEventListener("input", renderList);
+    $("projectIdInput").addEventListener("input", () => {
+      try {
+        renderProjectBindingStatus(currentProjectBinding());
+      } catch (error) {
+        renderProjectBindingStatus(null, error);
+      }
+    });
     $("sortSelect").addEventListener("change", renderList);
     $("limitSelect").addEventListener("change", renderList);
     $("chatText").addEventListener("input", updateStats);
@@ -2167,6 +2225,7 @@
       $("uiLangSelect").addEventListener("change", (e) => applyI18n(e.target.value));
       applyI18n(savedLang);
     }
+    bootstrapProjectBinding();
     updateStats();
   </script>
 </body>
