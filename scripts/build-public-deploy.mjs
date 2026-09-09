@@ -1,4 +1,3 @@
-import fs from "node:fs";
 import fsp from "node:fs/promises";
 import path from "node:path";
 import { createHash } from "node:crypto";
@@ -29,7 +28,7 @@ async function assertSourceContract() {
     throw new Error("index.html is missing the AT-03 project binding reference");
   }
   for (const marker of [
-    "ATLAS_PROJECT_BINDING_VERSION",
+    "PROJECT_BINDING_VERSION",
     "human_project_reference",
     "project_store_verification"
   ]) {
