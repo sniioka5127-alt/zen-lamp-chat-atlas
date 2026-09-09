@@ -2142,7 +2142,7 @@
 
       if (!$("zipInput").files.length && conversations.length === 0) setStatus($("loadStatus"), t.readyZip);
       if (!$("promptOutput").value) setStatus($("promptStatus"), t.ready);
-      const at02 = at02I18n[lang] || at02I18n.en;
+      // Reuse the AT-02 translation object declared above.
       if (headers[2]) headers[2].textContent = at02.hPrompt;
       if (paras[2]) paras[2].textContent = at02.pPrompt;
       if (workflowCards[2]) workflowCards[2].innerHTML = `<strong>${at02.workflow3Title}</strong><p>${at02.workflow3Text}</p>`;
