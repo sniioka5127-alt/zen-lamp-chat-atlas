@@ -1,25 +1,77 @@
 # zen-lamp-chat-atlas
 
-A local browser tool for turning long AI conversations into a thinking map.
+A local-first tool for turning long AI conversations into a thinking map and structured ContextItem candidates.
 
 A document can be summarized.  
 But a thinking process often needs to be mapped.
 
-Chat Atlas reads a ChatGPT export `conversations.json` file locally in the browser and helps generate prompts for:
+## Architecture direction — HIRAKU Tools
 
-- Thinking Timeline
-- Decision Log
-- Memory Governance
-- Next Chat Handoff
-- Compact Index
-- GPT / Gemini / Claude review prompts
+Chat Atlas is **Room 1** of a broader Human Agency workspace.
+
+> One house, four rooms.
+
+- **Chat Atlas** — see and understand what happened.
+- **Memory Curator** — choose what remains.
+- **Context Bridge** — choose what travels.
+- **Roundtable AI** — compare multiple AI outputs without surrendering human judgment.
+
+The product may be integrated as one workspace, while module responsibilities remain separated in the architecture.
+
+## AT-01 — ContextItem Producer
+
+AT-01 defines Chat Atlas as a **ContextItem producer**.
+
+Chat Atlas may map:
+
+- thinking trajectories
+- turning points
+- decisions
+- constraints
+- discoveries
+- questions
+- hypotheses
+- evidence
+- unresolved points
+- boundary risks
+
+It may propose structured ContextItem candidates, but it does **not** decide what becomes persistent memory and does **not** generate transfer/handoff.
+
+The AT-01 contract explicitly prevents an external AI from controlling:
+
+- approval status
+- Human Review state
+- Memory Policy
+- Transfer Policy
+
+Portable candidates use safe defaults for later Human Agency Core intake:
+
+- `memory_policy = review`
+- `transfer_policy = manual_only`
+- `derived_by = chat_atlas`
+- no approval fields
+
+See [`docs/AT01_CONTEXTITEM_PRODUCER_v0.1.md`](docs/AT01_CONTEXTITEM_PRODUCER_v0.1.md).
+
+## ChatGPT branch integrity
+
+AT-01 also adds a branch-aware parser for ChatGPT `conversations.json`.
+
+The older v1.2 parser flattened every node in `conversation.mapping` and sorted messages by time. In conversations with regenerated or edited branches, that can mix sibling branches that were never part of the same active conversation.
+
+The AT-01 reference parser instead:
+
+1. follows `current_node` back through its parent chain when available;
+2. falls back to a deepest leaf path when `current_node` is unavailable;
+3. keeps alternative sibling branches out of the active message stream;
+4. reports alternative branch metadata for later Atlas visualization.
 
 ## Privacy
 
-The file is processed locally in your browser.  
-It is not uploaded to a server.
+Conversation files are intended to be processed locally in the browser.  
+The current public prototype does not upload the selected conversation to a server or call an AI API.
 
-## How to use
+## Current public input paths
 
 ### Option A: ChatGPT export
 
@@ -34,45 +86,29 @@ It is not uploaded to a server.
 
 You can also paste a copied conversation manually, or import plain `.txt` / `.md` logs from ChatGPT, Claude, Gemini, or another AI.
 
-This makes `conversations.json` the cleanest path, but not the only path.
+## Migration note
 
-## Architecture direction — HIRAKU Tools
+The current public `index.html` v1.2 browser runtime still contains legacy **Memory Governance**, **Next Chat Handoff**, and provider-specific prompt responsibilities.
 
-Chat Atlas is being refined as **Room 1** of a broader Human Agency workspace.
+AT-01 freezes and tests the new producer boundary before that large single-file runtime is migrated. Under the adopted architecture:
 
-> One house, four rooms.
-
-- **Chat Atlas** — see and understand what happened.
-- **Memory Curator** — choose what remains.
-- **Context Bridge** — choose what travels.
-- **Roundtable AI** — compare multiple AI outputs without surrendering human judgment.
-
-The integrated product may present these as one workspace, but responsibilities remain separated in the architecture.
-
-### Migration note
-
-The current public prototype still contains **Memory Governance**, **Next Chat Handoff**, and provider-specific review-prompt responsibilities inside Chat Atlas.
-
-Under the new architecture:
-
-- Chat Atlas will focus on conversation mapping, branches, questions, hypotheses, decisions, discoveries, and unresolved points;
-- persistent memory selection moves to **Memory Curator**;
-- next-chat and provider-specific transfer generation moves to **Context Bridge**;
+- persistent memory selection belongs to **Memory Curator**;
+- transfer/handoff belongs to **Context Bridge**;
 - multi-model comparison belongs to **Roundtable AI**.
 
-Existing runtime behavior is not being removed yet. The shared Human Agency Core and module boundaries are being specified first, then the prototype will be migrated incrementally.
+The v1.2 runtime remains available as a fallback until the browser integration step is completed.
+
+## AT-01 reference files
+
+- `chat-atlas/producer.mjs`
+- `chat-atlas/chatgpt-branch.mjs`
+- `tests/chat-atlas-at01.test.mjs`
+- `.github/workflows/chat-atlas-at01.yml`
 
 ## Status
 
-Early prototype.  
-Current public version: v1.2
-
-New in v1.2:
-
-- Manual paste input
-- `.txt` / `.md` import
-- Generic AI log support
-- Source labels for ChatGPT / Claude / Gemini / Generic AI / Human Notes
+Public browser prototype: **v1.2**  
+AT-01 reference producer: **implementation candidate**
 
 ## Project page
 
@@ -84,4 +120,4 @@ https://zen-lamp.com/for-reddit/
 
 ## Note
 
-This is part of ZEN LAMP PROJECT, an independent project exploring human judgment, memory governance, and reflective AI design.
+This is part of ZEN LAMP PROJECT, an independent project exploring human judgment, memory governance, provenance, and reflective AI design.
