@@ -1,0 +1,25 @@
+name: Chat Atlas AT-01
+
+on:
+  push:
+    branches:
+      - at-01-contextitem-producer
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  atlas-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Run Chat Atlas AT-01 tests
+        run: node --test tests/chat-atlas-at01.test.mjs
