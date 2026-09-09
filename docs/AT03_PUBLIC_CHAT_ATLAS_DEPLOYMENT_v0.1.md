@@ -46,7 +46,7 @@ The deployment is not complete until the public endpoint verifies all of the fol
 1. `/tools/chat-atlas/` returns HTTP 2xx.
 2. Public `index.html` references `./chat-atlas/project-binding.js`.
 3. `project-binding.js` returns HTTP 2xx.
-4. Public source contains AT-03 markers including `ATLAS_PROJECT_BINDING_VERSION`, `human_project_reference`, and `project_store_verification`.
+4. Public source contains AT-03 markers including `PROJECT_BINDING_VERSION`, `human_project_reference`, and `project_store_verification`.
 5. A URL in the form `#project=prj_...` binds locally while the Project ID remains absent from the HTTP query string.
 6. No provider/network transport is introduced by `project-binding.js`.
 
