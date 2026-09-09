@@ -53,7 +53,7 @@ replaceOnce(
         const source = binding.source === "workspace_fragment" ? "One House fragment" : "manual local input";
         setStatus(
           status,
-          `AT-03: Bound to ${binding.project_id} via ${source}. Routing reference only; ProjectStore not verified. Project ID is not added to the external AI prompt.`,
+          "AT-03: Bound to " + binding.project_id + " via " + source + ". Routing reference only; ProjectStore not verified. Project ID is not added to the external AI prompt.",
           "ok"
         );
       } else {
