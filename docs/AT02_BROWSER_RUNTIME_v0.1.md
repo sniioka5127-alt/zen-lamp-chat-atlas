@@ -27,7 +27,7 @@ No external AI API is called by Chat Atlas in AT-02.
 - `chat-atlas/producer.mjs` — reference producer contract
 - `chat-atlas/chatgpt-branch.mjs` — reference branch-aware ChatGPT parser
 - `tests/chat-atlas-at02-browser.test.mjs` — browser runtime invariants
-- `scripts/verify-at02-index.mjs` — static integration verifier
+- `scripts/verify-at02-index.mjs` — static integration and inline JavaScript syntax verifier
 
 ## Human Authority invariants
 
@@ -106,6 +106,10 @@ AT-02 exports a local JSON envelope containing:
 
 Exact duplicate candidates with the same `kind + normalized content` are skipped within one parsed result.
 
+## Verification
+
+CI verifies both the reference/runtime behavior and the integrated single-file browser shell. In addition to required/forbidden responsibility markers, every non-empty inline `<script>` body in `index.html` is parsed as JavaScript so duplicate declarations and other syntax regressions fail the gate before merge.
+
 ## Acceptance criteria
 
 AT-02 is accepted when:
@@ -117,4 +121,5 @@ AT-02 is accepted when:
 5. returned AI JSON can be parsed into portable proposal-only ContextItems;
 6. no AI-controlled approval or transfer fields survive conversion;
 7. AT-01 and AT-02 tests pass;
-8. static index integration verification passes.
+8. static index integration verification passes;
+9. integrated inline browser JavaScript passes syntax verification.
