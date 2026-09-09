@@ -53,25 +53,52 @@ Portable candidates use safe defaults for later Human Agency Core intake:
 
 See [`docs/AT01_CONTEXTITEM_PRODUCER_v0.1.md`](docs/AT01_CONTEXTITEM_PRODUCER_v0.1.md).
 
+## AT-02 — Browser Runtime Integration
+
+AT-02 connects the v1.3 browser UI to the AT-01 producer contract.
+
+The browser flow is now:
+
+1. load or paste a conversation locally;
+2. review the selected conversation;
+3. generate an **Atlas Producer** prompt;
+4. paste the prompt into an AI chosen by the user;
+5. paste the returned Atlas JSON back into Chat Atlas;
+6. parse it into proposal-only portable `ContextItem[]`;
+7. copy or download the ContextItem JSON for later Memory Curator / Human Agency Core intake.
+
+The active browser modes are:
+
+- ContextItem Producer
+- Thinking Map
+- Decision Map
+- Full Conversation Map
+
+Legacy **Memory Governance** and next-chat handoff responsibilities are no longer active Chat Atlas modes.
+
+AT-02 also wires the browser UI to branch-aware ChatGPT parsing, so regenerated sibling branches are not silently mixed into the selected conversation.
+
+See [`docs/AT02_BROWSER_RUNTIME_v0.1.md`](docs/AT02_BROWSER_RUNTIME_v0.1.md).
+
 ## ChatGPT branch integrity
 
-AT-01 also adds a branch-aware parser for ChatGPT `conversations.json`.
-
-The older v1.2 parser flattened every node in `conversation.mapping` and sorted messages by time. In conversations with regenerated or edited branches, that can mix sibling branches that were never part of the same active conversation.
-
-The AT-01 reference parser instead:
+The branch-aware parser:
 
 1. follows `current_node` back through its parent chain when available;
 2. falls back to a deepest leaf path when `current_node` is unavailable;
 3. keeps alternative sibling branches out of the active message stream;
 4. reports alternative branch metadata for later Atlas visualization.
 
+This replaces the older v1.2 behavior that flattened every node in `conversation.mapping` and could mix mutually exclusive regenerated branches.
+
 ## Privacy
 
-Conversation files are intended to be processed locally in the browser.  
-The current public prototype does not upload the selected conversation to a server or call an AI API.
+Conversation files are processed locally in the browser.  
+The current browser prototype does not upload the selected conversation to a server or call an AI API.
 
-## Current public input paths
+The user chooses whether to copy the generated producer prompt into an external AI.
+
+## Input paths
 
 ### Option A: ChatGPT export
 
@@ -80,35 +107,28 @@ The current public prototype does not upload the selected conversation to a serv
 3. Find `conversations.json`.
 4. Open Chat Atlas.
 5. Load `conversations.json` in the browser.
-6. Select a conversation and generate a prompt.
+6. Select a conversation and generate an Atlas Producer prompt.
 
 ### Option B: Export-free input
 
 You can also paste a copied conversation manually, or import plain `.txt` / `.md` logs from ChatGPT, Claude, Gemini, or another AI.
 
-## Migration note
+## AT-02 reference files
 
-The current public `index.html` v1.2 browser runtime still contains legacy **Memory Governance**, **Next Chat Handoff**, and provider-specific prompt responsibilities.
-
-AT-01 freezes and tests the new producer boundary before that large single-file runtime is migrated. Under the adopted architecture:
-
-- persistent memory selection belongs to **Memory Curator**;
-- transfer/handoff belongs to **Context Bridge**;
-- multi-model comparison belongs to **Roundtable AI**.
-
-The v1.2 runtime remains available as a fallback until the browser integration step is completed.
-
-## AT-01 reference files
-
+- `index.html`
+- `chat-atlas/browser-runtime.js`
 - `chat-atlas/producer.mjs`
 - `chat-atlas/chatgpt-branch.mjs`
 - `tests/chat-atlas-at01.test.mjs`
-- `.github/workflows/chat-atlas-at01.yml`
+- `tests/chat-atlas-at02-browser.test.mjs`
+- `scripts/verify-at02-index.mjs`
+- `.github/workflows/chat-atlas-at02.yml`
 
 ## Status
 
-Public browser prototype: **v1.2**  
-AT-01 reference producer: **implementation candidate**
+Browser runtime: **v1.3 / AT-02 integrated**  
+AT-01 producer contract: **implemented**  
+AT-02 browser integration: **implemented**
 
 ## Project page
 

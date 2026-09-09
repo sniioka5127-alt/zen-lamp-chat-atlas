@@ -1,0 +1,28 @@
+name: Chat Atlas AT-02
+
+on:
+  push:
+    branches:
+      - main
+      - at-02-browser-runtime
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  browser-integration:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Run AT-01 and AT-02 tests
+        run: node --test tests/chat-atlas-at01.test.mjs tests/chat-atlas-at02-browser.test.mjs
+      - name: Verify integrated index
+        run: node scripts/verify-at02-index.mjs
