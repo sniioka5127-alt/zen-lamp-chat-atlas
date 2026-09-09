@@ -80,6 +80,30 @@ AT-02 also wires the browser UI to branch-aware ChatGPT parsing, so regenerated 
 
 See [`docs/AT02_BROWSER_RUNTIME_v0.1.md`](docs/AT02_BROWSER_RUNTIME_v0.1.md).
 
+## AT-03 — Human Project Binding
+
+AT-03 lets Room 1 carry the same Human Project identity used by the One House Workspace without giving Chat Atlas any new memory, transfer, or decision authority.
+
+A Workspace launch may bind Chat Atlas with a browser fragment:
+
+```text
+#project=prj_...
+```
+
+The fragment is handled locally by the browser runtime. The Project field is locked for that page and the resulting proposal envelope records an AT-03 `project_binding` object.
+
+Important boundaries:
+
+- Project binding is routing metadata only.
+- Chat Atlas does not read or verify the Human Agency Core `ProjectStore` directly, so `project_store_verification = not_verified` is explicit.
+- The Project ID is **not inserted into the external AI producer prompt**.
+- External AI JSON cannot override the Human-bound Project ID.
+- Standalone/manual Project binding remains available.
+- Workspace integration deliberately uses a URL fragment rather than a query parameter so the Project reference is not part of the HTTP request target.
+- Binding does not approve a ContextItem, persist memory, authorize transfer, establish truth, or create a Human Decision.
+
+See [`docs/AT03_PROJECT_BINDING_v0.1.md`](docs/AT03_PROJECT_BINDING_v0.1.md).
+
 ## ChatGPT branch integrity
 
 The branch-aware parser:
@@ -98,6 +122,8 @@ The current browser prototype does not upload the selected conversation to a ser
 
 The user chooses whether to copy the generated producer prompt into an external AI.
 
+AT-03 keeps the bound Human Project ID out of that producer prompt. Project identity is attached only to the local proposal envelope after the AI output is parsed.
+
 ## Input paths
 
 ### Option A: ChatGPT export
@@ -113,22 +139,25 @@ The user chooses whether to copy the generated producer prompt into an external 
 
 You can also paste a copied conversation manually, or import plain `.txt` / `.md` logs from ChatGPT, Claude, Gemini, or another AI.
 
-## AT-02 reference files
+## Reference files
 
 - `index.html`
 - `chat-atlas/browser-runtime.js`
+- `chat-atlas/project-binding.js`
 - `chat-atlas/producer.mjs`
 - `chat-atlas/chatgpt-branch.mjs`
 - `tests/chat-atlas-at01.test.mjs`
 - `tests/chat-atlas-at02-browser.test.mjs`
+- `tests/chat-atlas-at03-project-binding.test.mjs`
 - `scripts/verify-at02-index.mjs`
 - `.github/workflows/chat-atlas-at02.yml`
 
 ## Status
 
-Browser runtime: **v1.3 / AT-02 integrated**  
+Browser runtime: **v1.3 / AT-03 Project-bound integration**  
 AT-01 producer contract: **implemented**  
-AT-02 browser integration: **implemented**
+AT-02 browser integration: **implemented**  
+AT-03 Project Binding: **implemented**
 
 ## Project page
 
