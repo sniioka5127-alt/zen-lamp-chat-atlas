@@ -1,0 +1,41 @@
+name: AT-02 One-Time Fix
+
+on:
+  push:
+    branches:
+      - at-02-browser-runtime
+
+permissions:
+  contents: write
+
+jobs:
+  fix-and-clean:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout feature branch
+        uses: actions/checkout@v4
+        with:
+          ref: at-02-browser-runtime
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Fix duplicate AT-02 i18n declaration
+        run: node scripts/fix-at02-duplicate-i18n.mjs
+      - name: Run AT-01 and AT-02 tests
+        run: node --test tests/chat-atlas-at01.test.mjs tests/chat-atlas-at02-browser.test.mjs
+      - name: Verify integrated browser runtime
+        run: node scripts/verify-at02-index.mjs
+      - name: Commit fix and remove one-time machinery
+        shell: bash
+        run: |
+          rm -f scripts/fix-at02-duplicate-i18n.mjs .github/workflows/at02-one-time-fix.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "Nothing to commit"
+            exit 0
+          fi
+          git commit -m "AT-02: fix browser i18n syntax and clean migration helper"
+          git push
