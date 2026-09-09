@@ -1,0 +1,43 @@
+name: Chat Atlas Public Deploy Bundle
+
+on:
+  push:
+    branches:
+      - main
+      - at03-public-deploy-work
+    paths:
+      - "index.html"
+      - "chat-atlas/browser-runtime.js"
+      - "chat-atlas/project-binding.js"
+      - "scripts/build-public-deploy.mjs"
+      - "tests/at03-public-deploy.test.mjs"
+      - ".github/workflows/chat-atlas-public-deploy.yml"
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  package-public-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Run AT-03 deployment contract test
+        run: node --test tests/at03-public-deploy.test.mjs
+      - name: Build public deployment bundle
+        run: node scripts/build-public-deploy.mjs
+      - name: Upload deployment bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: chat-atlas-at03-public-deploy
+          path: artifacts/chat-atlas-at03-public-deploy/
+          if-no-files-found: error
+          retention-days: 30
